@@ -29,3 +29,8 @@ The client is able to ask for a subset of functionality, or scopes, which the re
 Once the authorization grant has been made, the client can then request an access token from the authorization server. This access token can be used at the protected resource to access the API, as granted by the resource owner
 
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/FirstSteps/Images/fs2.PNG" />
+
+## What OAuth 2.0 isn’t
+
+OAuth isn’t defined outside of the HTTP protocol. Since OAuth 2.0 with bearer tokens provides no message signatures, it is not meant to be used outside of HTTPS (HTTP over TLS). Sensitive secrets and information are passed over the wire, and OAuth requires a transport layer mechanism such as TLS to protect these secrets.
+
