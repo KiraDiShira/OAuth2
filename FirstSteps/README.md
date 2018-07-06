@@ -20,4 +20,12 @@ Why is that undesirable? Consider that you don’t want the printing service to 
 
 in OAuth, the end user delegates some part of their authority to access the protected resource to the client application to act on their behalf. To make that happen, OAuth introduces another component into the system: the **authorization server**.
 
+To acquire a token, the client first sends the resource owner to the authorization server in order to request that the resource owner authorize this client. 
+
+The resource owner authenticates to the authorization server and is generally presented with a choice of whether to authorize the client making the request. 
+
+The client is able to ask for a subset of functionality, or scopes, which the resource owner may be able to further diminish. 
+
+Once the authorization grant has been made, the client can then request an access token from the authorization server. This access token can be used at the protected resource to access the API, as granted by the resource owner
+
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/FirstSteps/Images/fs2.PNG" />
