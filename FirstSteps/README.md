@@ -1,4 +1,4 @@
-# What is OAuth 2.01 and why should you care?
+# What is OAuth 2 and why should you care?
 
 ## What is OAuth 2.0?
 
