@@ -30,7 +30,7 @@ The client is able to ask for a subset of functionality, or scopes, which the re
 
 Once the authorization grant has been made, the client can then request an access token from the authorization server. This access token can be used at the protected resource to access the API, as granted by the resource owner
 
-- - -> means **redirect**
+-- -- --> means **redirect**
 
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/FirstSteps/Images/fs2.PNG" />
 
