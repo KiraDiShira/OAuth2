@@ -33,3 +33,10 @@ The protected resource can then parse the token out of the header, determine whe
 An OAuth refresh token is similar in concept to the access token, in that it’s issued to the client by the authorization server and the client doesn’t know or care what’s inside the token. What’s different, though, is that the token is never sent to the protected resource. Instead, the client uses the refresh token to request new access tokens without involving the resource owner
 
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthDance/Images/od1.PNG" />
+
+Why would a client need to bother with a refresh token? In OAuth, an access token could stop working for a client at any point. The user could have revoked the token, the token could have expired, or some other system trigger made the token invalid. The client will usually find out about the token being invalid by using it and receiving an error response. Of course, the client could have the resource owner authorize it again, but what if the resource owner’s no longer there?
+
+In OAuth 2.0, access tokens were given the option to expire automatically, but we still need a way to access resources when the user was
+no longer there. The refresh token now takes the place of the long-lived token, but instead of it being used to obtain resources, it’s used only to get new access tokens that, in turn, can get the resources. This limits the exposure of the refresh token and the access token in separate but complementary ways. Refresh tokens also give the client the ability to down-scope its access. If a client is granted scopes A, B, and C, but it knows that it needs only scope A to make a particular call, it can use the refresh token to request an access token for only scope A. This lets a smart client follow the security principle of least privilege without burdening less-smart clients with trying to figure out what privileges an API needs.
+
+What then if the refresh token itself doesn’t work? The client can always bother the resource owner again, when they’re available. In other words, the fallback state for an OAuth client is to do OAuth again.
