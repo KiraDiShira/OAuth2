@@ -32,3 +32,4 @@ The protected resource can then parse the token out of the header, determine whe
 
 An OAuth refresh token is similar in concept to the access token, in that it’s issued to the client by the authorization server and the client doesn’t know or care what’s inside the token. What’s different, though, is that the token is never sent to the protected resource. Instead, the client uses the refresh token to request new access tokens without involving the resource owner
 
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthDance/Images/od1.PNG" />
