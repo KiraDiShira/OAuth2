@@ -40,3 +40,19 @@ In OAuth 2.0, access tokens were given the option to expire automatically, but w
 no longer there. The refresh token now takes the place of the long-lived token, but instead of it being used to obtain resources, it’s used only to get new access tokens that, in turn, can get the resources. This limits the exposure of the refresh token and the access token in separate but complementary ways. Refresh tokens also give the client the ability to down-scope its access. If a client is granted scopes A, B, and C, but it knows that it needs only scope A to make a particular call, it can use the refresh token to request an access token for only scope A. This lets a smart client follow the security principle of least privilege without burdening less-smart clients with trying to figure out what privileges an API needs.
 
 What then if the refresh token itself doesn’t work? The client can always bother the resource owner again, when they’re available. In other words, the fallback state for an OAuth client is to do OAuth again.
+
+## Back-channel communication
+
+Many parts of the OAuth process use a normal HTTP request and response format to communicate to each other. Since these requests generally occur outside the purview of the resource owner and user agent, they are collectively referred to as back-channel communication
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthDance/Images/od2.PNG" />
+
+## Front-channel communication
+
+Front-channel communication is a method of using HTTP requests to communicate indirectly between two systems through an intermediary web browser.
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthDance/Images/od3.PNG" />
+
+What if my client isn’t a web application?
+
+OAuth can be used by both web applications and native applications, but both need to use the same front-channel mechanism to receive information back from the authorization endpoint. The front channel always uses a web browser and HTTP redirects, but they don’t always have to be served by a regular web server in the end. Fortunately, there are a few useful tricks, such as internal web servers, application specific URI schemes, and push notifications from a back-end service that can be used. As long as the browser can invoke a call on that URI, it will work. We’ll explore all of these options in detail in chapter 6.
