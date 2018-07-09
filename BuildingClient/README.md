@@ -1,4 +1,6 @@
-#Building a simple OAuth client
+[index](https://github.com/KiraDiShira/OAuth2/blob/master/README.md#oauth2)
+
+# Building a simple OAuth client
 
 we’ll build a simple OAuth client, use
 the authorization code grant type to get a bearer access token from an authorization
