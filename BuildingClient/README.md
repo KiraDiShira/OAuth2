@@ -184,3 +184,4 @@ var server = app.listen(9000, 'localhost', function () {
 
 ## Refresh tokens
 
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/BuildingClient/Images/bc1.PNG" />
