@@ -1,3 +1,5 @@
+[index](https://github.com/KiraDiShira/OAuth2/blob/master/README.md#oauth2)
+
 # What is OAuth 2 and why should you care?
 
 ## What is OAuth 2.0?
