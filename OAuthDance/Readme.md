@@ -1,6 +1,10 @@
+## Authorization code grant
+
 There are two major steps to an OAuth transaction: issuing a token and using a token.
 
 We’ll be following the **authorization code grant**.
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthDance/Images/od4.PNG" />
 
 First, the resource owner goes to the client application and indicates to the client that they would like it to use a particular protected resource on their behalf. For instance, this is where the user would tell the
 printing service to use a specific photo storage service. This service is an API that the client knows how to process, and the client knows that it needs to use OAuth to do so.
