@@ -1,3 +1,5 @@
+[index](https://github.com/KiraDiShira/OAuth2/blob/master/README.md#oauth2)
+
 ## Authorization code grant
 
 There are two major steps to an OAuth transaction: issuing a token and using a token.
