@@ -1,4 +1,8 @@
+[index](https://github.com/KiraDiShira/OAuth2/blob/master/README.md#oauth2)
+
 # Building a simple OAuth protected resource
+
+```js
 
 var express = require("express");
 var bodyParser = require('body-parser');
@@ -101,3 +105,4 @@ var server = app.listen(9002, 'localhost', function () {
   console.log('OAuth Resource Server is listening at http://%s:%s', host, port);
 });
  
+```
