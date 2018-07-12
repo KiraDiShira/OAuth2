@@ -46,12 +46,16 @@ var getAccessToken = function(req, res, next) {
 		}
 	}, function(err, token) {
 		if (token) {
-			console.log("We found a matching token: %s", inToken);
-			console.log("Per me, token", token);
+			console.log("We found a matching token: %s", inToken);			
 		} else {
 			console.log('No matching token was found.');
 		}
 		req.access_token = token;
+		//req.access_token è tutto ciò che ho salvato sul database dell'authorization server quando ho generato access token
+		//req.access_token: { access_token: 'AfS5erZLCVenwI3kKKb9qLkg5mHdoJUm',
+  		//client_id: 'oauth-client-1',
+  		//scope: [ 'read', 'write', 'delete' ] }
+		//potrei aggiungerci ulteriori dettagli, tipo user e governare risposta ad api
 		next();
 		return;
 	});
