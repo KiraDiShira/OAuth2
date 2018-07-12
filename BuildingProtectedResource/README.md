@@ -2,6 +2,11 @@
 
 # Building a simple OAuth protected resource
 
+Protecting a web API with OAuth is fairly straightforward.
+- The token is parsed out of the incoming request.
+- The token is validated with the authorization server.
+- The response is served based on what the token is good for, which can take several forms.
+
 ```js
 
 var express = require("express");
