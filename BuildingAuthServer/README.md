@@ -558,3 +558,31 @@ var server = app.listen(9001, 'localhost', function () {
 });
  
 ```
+
+## Adding scope support
+
+it’s common to limit which scopes each client can access at a server. This provides a first line of defense against misbehaving clients, and allows a system to limit which software can perform certain actions at a protected resource.
+
+```js
+var clients = [
+{
+	"client_id": "oauth-client-1",
+	"client_secret": "oauth-client-secret-1",
+	"redirect_uris": ["http://localhost:9000/callback"],
+	"scope": "foo bar"
+}
+];
+```
+
+This member is a space-separated list of strings, each string representing a single OAuth scope value. Merely being registered like this doesn’t give an OAuth client access to the things protected by that scope, as it still needs to be authorized by the resource owner.
+
+A client can ask for a subset of its scopes during its call to the authorization using the scope parameter, which is a string containing a space-separated list of scope values. 
+
+We’ll need to parse that in our authorization endpoint, and we’re going to turn it into an array for easier processing and store it in the rscope variable. 
+
+Similarly, our client can optionally have a set of scopes associated with it, as we saw previously, and we’ll parse that into an array as the cscope variable. But because scope is an optional parameter, we need to be a little bit careful in how we handle it, in case a value wasn’t passed in.
+
+**Why a space-separated set of strings?**
+
+As it turns out, HTTP forms and query strings don’t have a good way to represent complex structures such as arrays and objects, and OAuth needs to use query parameters to pass values through the front channel. To get anything into this space, it needs to be encoded in some fashion. Although there are a few relatively common hacks such as serializing a JSON array as a string or repeating a parameter name, the OAuth working group decided that it would be much simpler for client developers to concatenate scope values, separated by a space character, into a single string. The space was chosen as a separator to allow for a more natural separator between URIs, which some systems use for their scope values.
+
