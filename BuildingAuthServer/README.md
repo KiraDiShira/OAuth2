@@ -291,6 +291,19 @@ var server = app.listen(9001, 'localhost', function () {
 ## Adding refresh token support
 
 ```js
+var token_response = { access_token: access_token, token_type: 'Bearer',
+refresh_token: req.body.refresh_token };
+```
+
+The token_type parameter (along with the expires_in and scope parameters, when they’re sent) applies only to the access token and not the refresh token, and there are no equivalents for the refresh token. The refresh token is still allowed to expire, but since refresh tokens are intended to be fairly long lived, the client isn’t given a hint about when that would happen. When a refresh token no longer works, a client has to fall back on whatever regular OAuth authorization grant it used to get the access token in the first place, such as the authorization code grant.
+
+Now that we’re issuing refresh tokens, we need to be able to respond to a request to refresh a token. In OAuth 2.0, refresh tokens are used at the token endpoint as a special kind of authorization grant. This comes with its own grant_type value of refresh_token, which we can check in the same branching code that handled our authorization_code grant type earlier.
+
+```js
+} else if (req.body.grant_type == 'refresh_token') {
+```
+
+```js
 
 var express = require("express");
 var url = require("url");
