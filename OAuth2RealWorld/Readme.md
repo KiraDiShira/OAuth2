@@ -54,3 +54,5 @@ Referer: http://localhost:9001/authorize?response_type=code&scope=foo&client_
 id=oauth-client-1&redirect_uri=http%3A%2F%2Flocalhost%3A9000%2Fcallback&state
 =Lwt50DDQKUB8U7jtfLQCVGDL9cnmwHH1
 ```
+
+The fragment portion of the URI isn’t usually sent back to the server, which means that the token value itself is available only inside the browser. Note, however, that this behavior does vary depending on the browser implementation and version.
