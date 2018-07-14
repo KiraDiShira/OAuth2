@@ -8,6 +8,7 @@ One of the key areas that OAuth 2.0 can vary is that of the **authorization gran
 - [Client credentials grant type](#client-credentials-grant-type)
 - [Resource owner credentials grant type](#resource-owner-credentials-grant-type)
 - [Assertion grant types](#assertion-grant-types)
+- [Choosing the appropriate grant type](#choosing-the-appropriate-grant-type)
 
 ## Implicit grant type
 
@@ -1366,3 +1367,7 @@ The body of this example assertion translates to the following:
 The authorization server parsers the assertion, checks its cryptographic protection, and processes its contents to determine what kind of token to generate. This assertion can represent any number of different things, such as a resource owner’s identity or a set of allowed scopes. The authorization server will generally have a policy that determines the parties that it will accept assertions from and rules for what those assertions mean. In the end, it generates an access token as with any other response from the token endpoint. The client can then take this token and use it at the protected resource in the normal fashion.
 
 In the real world, you’re likely to see assertions used only in limited, usually enterprise, contexts.
+
+## Choosing the appropriate grant type
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuth2RealWorld/Images/rw4.PNG" />
