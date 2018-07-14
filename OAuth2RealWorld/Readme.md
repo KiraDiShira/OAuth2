@@ -7,6 +7,7 @@ One of the key areas that OAuth 2.0 can vary is that of the **authorization gran
 - [Implicit grant type](#implicit-grant-type)
 - [Client credentials grant type](#client-credentials-grant-type)
 - [Resource owner credentials grant type](#resource-owner-credentials-grant-type)
+- [Assertion grant types](#assertion-grant-types)
 
 ## Implicit grant type
 
@@ -1322,3 +1323,46 @@ var server = app.listen(9000, 'localhost', function () {
 });
  
 ```
+
+# Assertion grant types
+
+the assertion grant types, the client is given a structured and cryptographically protected item called an assertion to give to the authorization server in exchange for a token.
+
+Two formats are standardized so far: one using Security Assertion Markup Language (SAML),4 and another using JSON Web Token (JWT)5 (which we’ll cover in chapter 11). This grant type uses the back channel exclusively, and much like the client credentials flow there may not be an explicit resource owner involved. Unlike the client credentials flow, the rights associated with the resulting token are determined by the assertion being presented and not solely by the client itself. Since the assertion generally comes from a third party external to the client, the client can remain unaware of the nature of the assertion itself.
+
+Like other back-channel flows, the client makes an HTTP POST to the authorization server’s token endpoint. The client authenticates itself as usual and includes the assertion as a parameter. The means by which the client can get this assertion vary wildly, and are considered out of scope by many of the associated protocols. The client could be handed the assertion by a user, or by a configuration system, or through  another non-OAuth protocol. In the end, as with an access token, it doesn’t matter how the client got the assertion as long as it’s able to present the assertion to the authorization server. In this example, the client is presenting a JWT assertion, which is reflected in the value of the grant_type parameter.
+
+```js
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic b2F1dGgtY2xpZW50LTE6b2F1dGgtY2xpZW50LXNlY3JldC0x
+grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer
+&assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6InJzYS0xIn0.eyJpc3MiOi
+JodHRwOi8vdHJ1c3QuZXhhbXBsZS5uZXQvIiwic3ViIjoib2F1dGgtY2xpZW50LTEiLCJzY29wZSI
+6ImZvbyBiYXIgYmF6IiwiYXVkIjoiaHR0cDovL2F1dGhzZXJ2ZXIuZXhhbXBsZS5uZXQvdG9rZW4i
+LCJpYXQiOjE0NjU1ODI5NTYsImV4cCI6MTQ2NTczMzI1NiwianRpIjoiWDQ1cDM1SWZPckRZTmxXO
+G9BQ29Xb1djMDQ3V2J3djIifQ.HGCeZh79Va-7meazxJEtm07ZyptdLDu_Ocfw82F1zAT2p6Np6Ia_
+vEZTKzGhI3HdqXsUG3uDILBv337VNweWYE7F9ThNgDVD90UYGzZN5VlLf9bzjnB2CDjUWXBhgepSy
+aSfKHQhfyjoLnb2uHg2BUb5YDNYk5oqaBT_tyN7k_PSopt1XZyYIAf6-5VTweEcUjdpwrUUXGZ0fl
+a8s6RIFNosqt5e6j0CsZ7Eb_zYEhfWXPo0NbRXUIG3KN6DCA-ES6D1TW0Dm2UuJLb-LfzCWsA1W_
+sZZz6jxbclnP6c6Pf8upBQIC9EvXqCseoPAykyR48KeW8tcd5ki3_tPtI7vA
+```
+
+The body of this example assertion translates to the following:
+
+```js
+{
+	"iss": "http://trust.example.net/",
+	"sub": "oauth-client-1",
+	"scope": "foo bar baz",
+	"aud": "http://authserver.example.net/token",
+	"iat": 1465582956,
+	"exp": 1465733256,
+	"jti": "X45p35IfOrDYNlW8oACoWoWc047Wbwv2"
+}
+```
+
+The authorization server parsers the assertion, checks its cryptographic protection, and processes its contents to determine what kind of token to generate. This assertion can represent any number of different things, such as a resource owner’s identity or a set of allowed scopes. The authorization server will generally have a policy that determines the parties that it will accept assertions from and rules for what those assertions mean. In the end, it generates an access token as with any other response from the token endpoint. The client can then take this token and use it at the protected resource in the normal fashion.
+
+In the real world, you’re likely to see assertions used only in limited, usually enterprise, contexts.
