@@ -4,6 +4,9 @@
 
 One of the key areas that OAuth 2.0 can vary is that of the **authorization grant**, colloquially known as the **OAuth flow**.
 
+- [Implicit grant type](#implicit-grant-type)
+- [Client credentials grant type](#client-credentials-grant-type)
+
 ## Implicit grant type
 
 One key aspect of the different steps in the authorization code flow is that it keeps information separate between different components. This way, the browser doesn’t learn things that only the client should know about, and the client doesn’t get to see the state of the browser, and so on. But what if we were to put the client inside the browser?
@@ -350,4 +353,38 @@ var server = app.listen(9001, 'localhost', function () {
 
   console.log('OAuth Authorization Server is listening at http://%s:%s', host, port);
 });
+```
+
+## Client credentials grant type
+
+What if there is no explicit resource owner, or the resource owner is indistinguishable from the client software itself? This is a fairly common situation, in which there are back-end systems that need to communicate directly with each other and not necessarily on behalf of any one particular user. With no user to delegate the authorization to the client, can we even do OAuth?
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuth2RealWorld/Images/rw2.PNG" />
+
+We can, by making use of the client credentials grant type. This flow makes exclusive use of the back channel.
+
+The client requests a token from the token endpoint as it would with the authorization code grant, except that this time it uses the `client_credentials` value for the `grant_type` parameter and doesn’t have an authorization code or other temporary credential to trade for the token. 
+
+Instead, the client authenticates itself directly, and the authorization server issues an appropriate access token. The client can also request specific scopes inside this call using the scope parameter, analogous to the scope parameter used at the authorization endpoint by the authorization code and implicit flows.
+
+```
+POST /token
+Host: localhost:9001
+Accept: application/json
+Content-type: application/x-www-form-encoded
+Authorization: Basic b2F1dGgtY2xpZW50LTE6b2F1dGgtY2xpZW50LXNlY3JldC0x
+grant_type=client_credentials&scope=foo%20bar
+```
+
+The response from the authorization server is a normal OAuth token endpoint response: a JSON object containing the token information. The client credentials flow does not issue a refresh token because the client is assumed to be in the position of being able to request a new token for itself at any time without involving a separate resource owner, which renders the refresh token unnecessary in this context.
+
+```
+HTTP 200 OK
+Date: Fri, 31 Jul 2015 21:19:03 GMT
+Content-type: application/json
+{
+	"access_token": "987tghjkiu6trfghjuytrghj",
+	"scope": "foo bar",
+	"token_type": "Bearer"
+}
 ```
