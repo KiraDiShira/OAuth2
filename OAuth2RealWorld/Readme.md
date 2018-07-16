@@ -13,6 +13,7 @@ One of the key areas that OAuth 2.0 can vary is that of the **authorization gran
 - Client deployments
 	- [Web applications](#web-applications)
 	- [Browser applications](#browser-applications)
+	- [Native applications](#native-applications)
 	
 ## Implicit grant type
 
@@ -1557,4 +1558,199 @@ Let’s take a hands-on look at a browser application. Open up ch-6-ex-4 and edi
   </body>
 </html>
 
+```
+
+## Native applications
+
+Native applications are those that run directly on the end user’s device, be it a computer or mobile platform. The software for the application is generally compiled or packaged externally and then installed on the device. These applications can easily make use of the back channel by making a direct HTTP call outbound to the remote server. Since the user isn’t in a web browser, as they are with a web application or a browser client, the front channel is more problematic.
+
+To make a front-channel request, the native application needs to be able to reach out to the system web browser or an embedded browser view to get the user to the authorization server directly. To listen for front-channel responses, the native application needs to be able to serve a URI that the browser can be redirected to by the authorization server. This usually takes one of the following forms:
+
+- An embedded web server running on localhost
+- A remote web server with some type of out-of-band push notification capability to the application
+- A custom URI scheme such as `com.oauthinaction.mynativeapp:/` that is registered with the operating system such that the application is called when URIs with that scheme are accessed
+
+For mobile applications, the custom URI scheme is the most common. Native applications are capable of using the authorization code, client credentials, or assertion flows easily, but because they can keep information out of the web browser, it is not recommended that native applications use the implicit flow.
+
+The first thing to notice is the client configuration.
+
+```js
+var client = {
+	"client_id": "native-client-1",
+	"client_secret": "oauth-native-secret-1",
+	"redirect_uris": ["com.oauthinaction.mynativeapp:/"],
+	"scope": "foo bar"
+};
+```
+As you can see, the registration details are same as they are for a normal OAuth client. One thing that might catch your attention is the registered redirect_uris. This is different from a traditional client because it uses a custom URI scheme, `com.oauthinaction.mynativeapp:/` in this case, rather than a more traditional `https://`. Whenever the system browser sees a URL starting with com.oauthinaction .mynativeapp:/, whether it’s from a link clicked by the user or an HTTP redirect from another page or from an explicit launch from another application, our application will get called using a special handler. Inside this handler, we have access to the full URL string that was used in the link or redirect, just as if we were a web server serving the URL through HTTP.
+
+**Keeping secrets in native applications**
+
+In our exercise, we’re using a client secret that’s been configured directly into the client as we did with the web application in chapter 3. In a production native application, our exercise’s approach doesn’t work very well because each copy of the application would have access to the secret, which of course doesn’t make it very secret. A few alternative options are available to use in practice. We’ll cover this issue in greater detail in section 6.2.4
+
+```js
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>OAuth in Action: OAuth Native Client</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+  </head>
+  <body>
+
+    <header>OAuth in Action</header>
+
+    <div class="page">
+      
+      <div class="block">
+        <p>Scope value: <br><span class="label label-danger oauth-scope-value"></span></p>
+        <p>Access token value: <br><span class="label label-danger oauth-access-token"></span></p>
+      </div>
+
+      <div class="block">
+        <button class="oauth-authorize" type="button">Get OAuth Token</button> 
+        <button class="oauth-fetch-resource" type="button">Get Protected Resource</button>
+      </div>
+
+      <div class="block">
+        <div>Data from protected resource:</div>
+        <div>
+          <pre class="oauth-protected-resource"></pre>
+        </div>
+      </div>
+
+    </div>  
+
+    <script>
+
+      function handleOpenURL(url) {
+        setTimeout(function() {
+          processCallback(url.substr(url.indexOf('?') + 1));
+        }, 0);
+      }
+ 
+      var callbackData;
+
+      // client information
+      var client = {
+        'client_id': 'native-client-1',
+        'client_secret': 'oauth-native-secret-1',
+        'redirect_uris': ['com.oauthinaction.mynativeapp://'],
+        'scope': 'foo bar'
+      };
+
+      // authorization server information
+      var authServer = {
+        authorizationEndpoint: 'http://localhost:9001/authorize',
+        tokenEndpoint: 'http://localhost:9001/token'
+      };
+
+      var protectedResource = 'http://localhost:9002/resource';
+
+      function generateState(len) {
+        var ret = '';
+        var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+        for (var i=0; i < len; i++) {
+          // add random character
+          ret += possible.charAt(Math.floor(Math.random() * possible.length));  
+        }
+        
+        return ret;
+      }  
+
+      function handleAuthorizationRequestClick(ev) {
+        var state = generateState(32);
+
+        localStorage.setItem('oauth-state', state);
+        
+        var url = authServer.authorizationEndpoint + '?' +
+                'response_type=code' +
+                '&state=' + state +
+                '&scope=' + encodeURIComponent(client.scope) +
+                '&client_id=' + encodeURIComponent(client.client_id) +
+                '&redirect_uri=' + encodeURIComponent(client.redirect_uris[0]);
+
+        cordova.InAppBrowser.open(url, '_system');
+         
+      }
+
+      function handleFetchResourceClick(ev) {
+        if (callbackData != null ) {
+
+          $.ajax({
+            url: protectedResource,
+            type: 'POST',
+            crossDomain: true,
+            dataType: 'json',
+            headers: {
+              'Authorization': 'Bearer ' + callbackData.access_token
+            }
+          }).done(function(data) {
+            $('.oauth-protected-resource').text(JSON.stringify(data));
+          }).fail(function() {
+            $('.oauth-protected-resource').text('Error while fetching the protected resource');
+          });
+
+        }
+      }
+
+      function processCallback(h) {
+        var whitelist = ['code', 'state']; // for parameters
+
+        callbackData = {};
+
+        h.split('&').forEach(function (e) {
+          var d = e.split('=');
+
+          if (whitelist.indexOf(d[0]) > -1) {
+            callbackData[d[0]] = d[1];  
+          }
+        });          
+
+        if (callbackData.state !== localStorage.getItem('oauth-state')) {
+          console.log('State DOES NOT MATCH: expected %s got %s', localStorage.getItem('oauth-state'), callbackData.state);
+          callbackData = null;
+          $('.oauth-protected-resource').text("Error state value did not match");
+        } else {
+          $.ajax({
+            url: authServer.tokenEndpoint,
+            type: 'POST',
+            crossDomain: true,
+            dataType: 'json',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'                 
+            },
+            data: {
+              grant_type: 'authorization_code',
+              code: callbackData.code,
+              client_id: client.client_id,
+              client_secret: client.client_secret,
+            }
+          }).done(function(data) {
+            $('.oauth-access-token').text(data.access_token);
+            callbackData.access_token = data.access_token;
+          }).fail(function() {
+            $('.oauth-protected-resource').text('Error while getting the access token');
+          });
+
+        }
+      }
+
+      // fill placeholder on UI
+      $('.oauth-scope-value').text(client.scope);
+
+      // UI button click handler
+      $('.oauth-authorize').on('click', handleAuthorizationRequestClick);
+      $('.oauth-fetch-resource').on('click', handleFetchResourceClick);
+ 
+            
+    </script>
+  </body>
+</html>
 ```
