@@ -10,7 +10,9 @@ One of the key areas that OAuth 2.0 can vary is that of the **authorization gran
 	- [Resource owner credentials grant type](#resource-owner-credentials-grant-type)
 	- [Assertion grant types](#assertion-grant-types)
 	- [Choosing the appropriate grant type](#choosing-the-appropriate-grant-type)
-
+- Client deployments
+	- [Web applications](#web-applications)
+	
 ## Implicit grant type
 
 One key aspect of the different steps in the authorization code flow is that it keeps information separate between different components. This way, the browser doesn’t learn things that only the client should know about, and the client doesn’t get to see the state of the browser, and so on. But what if we were to put the client inside the browser?
@@ -1372,3 +1374,18 @@ In the real world, you’re likely to see assertions used only in limited, usual
 ## Choosing the appropriate grant type
 
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuth2RealWorld/Images/rw4.PNG" />
+
+# Client deployments
+
+OAuth clients come in many different forms and styles, but they can be broadly categorized into one of three categories: web applications, in-browser applications, and native applications. Each of these has its own strengths and weaknesses, and we’ll cover them in turn.
+
+## Web applications
+
+These applications are able to make full use of both front- and back-channel communication methods.
+
+Because of this flexibility, web applications can easily use the authorization code, client credentials, or assertions flows most effectively. Since the fragment component of the request URI isn’t usually passed to the server by the browser, the implicit flow doesn’t work for web applications in most circumstances.
+
+## Browser applications
+
+These clients can easily use the front channel, as sending the user to another page through an HTTP redirect is trivial. Responses from the front channel are also simple, as the client’s software does need to be loaded from a web server. However, backchannel communication is more complicated, as browser applications are limited by same-origin policies and other security restrictions designed to prevent cross-domain attacks. Consequently, these types of applications are best suited for the implicit flow, which has been optimized for this case.
+
