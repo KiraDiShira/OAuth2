@@ -6,3 +6,4 @@
 - [Building a simple OAuth protected resource](https://github.com/KiraDiShira/OAuth2/blob/master/BuildingProtectedResource/README.md#building-a-simple-oauth-protected-resource)
 - [Building a simple OAuth authorization server](https://github.com/KiraDiShira/OAuth2/tree/master/BuildingAuthServer#building-a-simple-oauth-authorization-server)
 - [OAuth2 in the real world](https://github.com/KiraDiShira/OAuth2/tree/master/OAuth2RealWorld#oauth-20-in-the-real-world)
+- [Common client vulnerabilities](https://github.com/KiraDiShira/OAuth2/blob/master/CommonClientVulnerabilities/Readme.md#common-client-vulnerabilities)
