@@ -14,6 +14,7 @@ One of the key areas that OAuth 2.0 can vary is that of the **authorization gran
 	- [Web applications](#web-applications)
 	- [Browser applications](#browser-applications)
 	- [Native applications](#native-applications)
+	- [Handling secrets](#handling-secrets)
 	
 ## Implicit grant type
 
@@ -1754,3 +1755,21 @@ In our exercise, we’re using a client secret that’s been configured directly
   </body>
 </html>
 ```
+
+## Handling secrets
+
+The purpose of the client secret is to let an instance of client software authenticate itself to the authorization server, apart from any authorizations conferred to it by the resource owner. The client secret isn’t available to the resource owner or the browser, allowing it to uniquely identify the client software application.
+
+The problem comes from needing to differentiate between **configuration time secrets**, which every copy of a client gets, and **runtime secrets**, which are distinct for each instance. Client secrets are configuration time secrets because they represent the client software itself and are configured into the client software.
+
+Access tokens, refresh tokens, and authorization codes are all runtime secrets because they’re stored by the client software after it is deployed and running. Runtime secrets do still need to be stored securely and protected appropriately, but they’re designed to be easily revocable and rotatable. Configuration time secrets, in contrast, are generally things that aren’t expected to change often.
+
+In OAuth 2.0, this dichotomy is addressed by removing the requirement for all clients to have a client secret and instead defining two classes of clients, **public clients** and **confidential clients**, based on their ability to keep a configuration time secret.
+
+Public clients, as the name suggests, are unable to hold configuration time secrets and therefore have no client secret. This is usually because the code for the client is exposed to the end user in some fashion, either by being downloaded and executed in a browser or by executing natively on the user’s device. Consequently, most browser applications and many native applications are public clients. In either case, each copy of the client software is identical and there are potentially many instances of it. The user of any instance could extract the configuration information for that instance, including any configured client ID and client secret. Although all instances share the same client ID, this doesn’t cause a problem because the client ID isn’t intended to be a secret value. Anyone attempting to impersonate this client by copying its client ID will still need to use its redirect URIs and be bound by other measures. Having an additional client secret, in this case, does no good because it could be extracted and copied along with the client ID.
+
+A potential mitigation is available for applications that use the authorization code flow in the form of **Proof Key for Code Exchange** (PKCE), discussed in chapter 10. The PKCE protocol extension allows a client to more tightly bind its initial request to the authorization code that it receives, but without using a client secret or equivalent.
+
+Confidential clients are able to hold configuration time secrets. Each instance of the client software has a distinct configuration, including its client ID and secret, and these values are difficult to extract by end users. A web application is the most common type of confidential client, as it represents a single instance running on a web server that can handle multiple resource owners with a single OAuth client. The client ID can be gathered as it is exposed through the web browser, but the client secret is passed only in the back channel and is never directly exposed.
+
+An alternative approach to this problem is to use **dynamic client registration**, discussed in depth in chapter 12. By using dynamic client registration, an instance of a piece of client software can register itself at runtime. This effectively turns what would otherwise need to be a configuration time secret into a runtime secret, allowing a higher level of security and functionality to clients that would otherwise be unable to use it.
