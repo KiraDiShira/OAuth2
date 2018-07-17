@@ -4,6 +4,7 @@
 
 - [CSRF attack against the client](#csrf-attack-against-the-client)
 - [Theft of client credentials](#theft-of-client-credentials)
+- [Registration of the redirect URI](#registration-of-the-redirect-uri)
 
 ## CSRF attack against the client
 
@@ -91,3 +92,11 @@ if (!client.client_id) {
 });
 ```
 We’re now ready to run our modified native application If you start the usual OAuth flow, you can now appreciate that both the client_id and client_secret have been freshly generated, and these will be different for any instance of the native application. This will solve the issue of having the client_secret shipped with the native application artifact. A production instance of such a native application would, of course, store this information so that each installation of the client software will register itself once on startup, but not every time the user launches it. No two instances of the client application will have access to each other’s credentials, and the authorization server can differentiate between instances.
+
+## Registration of the redirect URI
+
+If you’re not careful with `redirect_uri` registration requirements, token hijacking attacks become significantly easier than you might think.
+
+The main reason behind this is that sometimes authorization servers use different redirect_uri validation policies. As we’ll see in chapter 9, the only reliably safe validation method the authorization server should adopt is exact matching. All the other potential solutions, based on regular expressions or allowing subdirectories of the registered redirect_uri, are suboptimal and sometimes even dangerous.
+
+<img src="" />
