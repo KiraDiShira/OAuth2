@@ -99,4 +99,57 @@ If you’re not careful with `redirect_uri` registration requirements, token hij
 
 The main reason behind this is that sometimes authorization servers use different redirect_uri validation policies. As we’ll see in chapter 9, the only reliably safe validation method the authorization server should adopt is exact matching. All the other potential solutions, based on regular expressions or allowing subdirectories of the registered redirect_uri, are suboptimal and sometimes even dangerous.
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonClientVulnerabilities/Image/ccv_1.PNG" />
+
+As seen in table 7.1, when the OAuth provider uses the allowing subdirectory method for matching the redirect_uri, there is certain flexibility on the redirect_uri request parameter.
+
+Now it isn’t necessarily true that having an authorization server that uses the allowing subdirectory validation strategy is bad, on its own. But when combined with an OAuth client registering a “too loose” redirect_uri, this is indeed lethal. In addition, the larger the OAuth client’s internet exposure, the easier it is to find a loophole to exploit this vulnerability.
+
+### Stealing the authorization code through the referrer
+
+The first attack described targets the authorization code grant type and is based on information leakage through the HTTP referrer. At the end of it, the attacker manages to hijack the resource owner’s authorization code.
+
+The HTTP referrer is an HTTP header field that browsers (and HTTP clients in general) attach when surfing from one page to another. In this way, the new web page can see where the request came from, such as an incoming link from a remote site.
+
+Let’s assume you just registered an OAuth client to one OAuth provider that has an authorization server that uses the allowing subdirectory validation strategy for redirect_uri. Your OAuth callback endpoint is
+
+```
+https://yourouauthclient.com/oauth/oauthprovider/callback
+```
+
+But you registered as
+
+```
+https://yourouauthclient.com/
+```
+
+An excerpt of the request originated by your OAuth client while performing the OAuth integration might look like
+
+```
+https://oauthprovider.com/authorize?response_type=code&client_id=CLIENT_ID&scope=SCOPES&state=STATE&redirect_uri=https://yourouauthclient.com/
+```
+
+This particular OAuth provider adopts the allowing subdirectory validation strategy for redirect_uri, and therefore validates only the start of the URI and considers the request as valid if everything else is appended after the registered redirect_uri. Hence the registered redirect_uri is perfectly valid under a functional point of view, and things are good so far.
+
+The attacker also needs to be able to create a page on the target site underneath the registered redirect URI, for example:
+
+```
+https://yourouauthclient.com/usergeneratedcontent/attackerpage.html
+```
+
+From here, it’s enough for the attacker to craft a special URI of this form:
+
+```
+https://oauthprovider.com/authorize?response_type=code&client_id=CLIENT_ID&scope=SCOPES&state=STATE&redirect_uri=https://yourouauthclient.com/usergeneratedcontent/attackerpage.html
+```
+
+and make the victim click on it, through any number of phishing techniques.
+
+Since you registered `https://yourouauthclient.com` as redirect_uri and the OAuth provider adopts an allowing subdirectory validation strategy, `https://yourouauthclient.com/usergeneratedcontent/attackerpage.html` is a perfectly valid redirect_uri for your client.
+
+That said, now that this is enough to “convince” the victim to click the crafted link and go through the authorization endpoint, the victim then will end up with something like
+
+```
+https://yourouauthclient.com/usergeneratedcontent/attackerpage.html?code=e8e0dc1c-2258-6cca-72f3-7dbe0ca97a0b
+```
+
