@@ -2,6 +2,9 @@
 
 # Common client vulnerabilities
 
+- [CSRF attack against the client](#csrf-attack-against-the-client)
+- [Theft of client credentials](#theft-of-client-credentials)
+
 ## CSRF attack against the client
 
 Both the authorization code and the implicit grant types mention a recommended state parameter. This parameter is:
@@ -39,3 +42,52 @@ The generated state value can then be stored either in the cookie or, more appro
 Although the use of state isn’t explicitly enforced by the specification, it is considered best practice and its presence is needed to defend against CSRF.
 
 https://auth0.com/blog/ten-things-you-should-know-about-tokens-and-cookies/
+
+## Theft of client credentials
+
+The OAuth core specification specifies four different grant types. Each grant type is designed with different security and deployment aspects in mind and should be used accordingly, as discussed in chapter 6. For example, the implicit grant flow is to be used by OAuth clients where the client code executes within the user agent environment. Such clients are generally JavaScript-only applications, which have, of course, limited capability of hiding the client_secret in client side code running in the browser. On the other side of the fence there are classic server-side applications that can use the authorization code grant type and can safely store the client_secret somewhere in the server.
+
+What about native applications? We have already seen in chapter 6 when to use which grant type, and as a reminder it isn’t recommended that native applications use the implicit flow. It is important to understand that for a native application, even if the client_secret is somehow hidden in the compiled code it must not be considered as a secret. Even the most arcane artifact can be decompiled and the client_secret is then no longer that secret. The same principle applies to mobile clients and desktop native applications.
+
+In chapter 12 we’re going to discuss in detail how to use dynamic client registration to configure the client_secret at runtime.
+
+Client_id and client_secret parts are empty.
+
+```js
+var client = {
+  'client_name': 'Native OAuth Client',
+  'client_id': '',
+  'client_secret': '',
+  'redirect_uris': ['com.oauthinaction.mynativeapp:/'],
+  'scope': 'foo bar'
+};
+```
+
+This information will be available at runtime after the dynamic registration phase is concluded. Now locate the authorization server information and add the registrationEndpoint.
+
+```js
+var authServer = {
+  authorizationEndpoint: 'http://localhost:9001/authorize',
+  tokenEndpoint: 'http://localhost:9001/token',
+  registrationEndpoint: 'http://localhost:9001/register'
+};
+```
+
+Finally, we need to plug the dynamic registration request when the application first requests an OAuth token, if it doesn’t already have a client ID.
+
+```js
+if (!client.client_id) {
+  $.ajax({
+       url: authServer.registrationEndpoint,
+       type: 'POST',
+       data: client,
+       crossDomain: true,
+       dataType: 'json'
+   }).done(function(data) {
+        client.client_id = data.client_id;
+        client.client_secret = data.client_secret;
+   }).fail(function() {
+        $('.oauth-protected-resource').text('Error while fetching registration endpoint');
+});
+```
+We’re now ready to run our modified native application If you start the usual OAuth flow, you can now appreciate that both the client_id and client_secret have been freshly generated, and these will be different for any instance of the native application. This will solve the issue of having the client_secret shipped with the native application artifact. A production instance of such a native application would, of course, store this information so that each installation of the client software will register itself once on startup, but not every time the user launches it. No two instances of the client application will have access to each other’s credentials, and the authorization server can differentiate between instances.
