@@ -5,6 +5,8 @@
 - [CSRF attack against the client](#csrf-attack-against-the-client)
 - [Theft of client credentials](#theft-of-client-credentials)
 - [Registration of the redirect URI](#registration-of-the-redirect-uri)
+  - [Stealing the authorization code through the referrer](#stealing-the-authorization-code-through-the-referrer)
+  - [Stealing the token through an open redirector](#stealing-the-token-through-an-open-redirector)
 
 ## CSRF attack against the client
 
@@ -170,3 +172,16 @@ In the background, the victim’s browser will load the embedded img tag for a r
 The URI in the attacker’s post must be an https URI. Indeed, as per section 15.1.3 (Encoding Sensitive Information in URI’s) of HTTP RFC [RFC 2616]: Clients SHOULD NOT include a Referer header field in a (non-secure) HTTP request if the referring page was transferred with a secure protocol.
 
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonClientVulnerabilities/Image/ccv_2.PNG" />
+
+### Stealing the token through an open redirector
+
+Another attack occurs along the lines discussed in the previous section, but this one is based on the `implicit grant type`.
+
+This attack also targets the access token rather than the authorization code. To understand this attack, you need to understand how the URI fragment (the part after the #) is handled by browsers on HTTP redirect responses (HTTP 301/302 responses).
+
+If an HTTP request `/bar#foo` has a 302 response with Location `/qux`, is the `#foo` part appended to the new URI (namely, the new request is `/qux#foo`) or not (namely, the new request is `/qux`)? 
+
+What the majority of browsers do at the moment is to preserve the original fragment on redirect: that is, the new request is on the form `/qux#foo`. Also remember that fragments are never sent to the server, as they’re intended to be used inside the browser itself.
+
+The attack here is similar to the previous one and all the premises we have established there remain: “too open” registered redirect_uri and authorization server that uses an allowing subdirectory validation strategy. As the leakage here happens through an open redirect rather than using the referrer, you also need to assume that the OAuth client’s domain has an open redirect, for example: `https://yourouauthclient.com/redirector?goto=http://targetwebsite.com`. As previously mentioned, there are fair chances that this kind of entry point exists on a website (even in the OAuth context13).
+
