@@ -8,6 +8,7 @@
   - [Stealing the authorization code through the referrer](#stealing-the-authorization-code-through-the-referrer)
   - [Stealing the token through an open redirector](#stealing-the-token-through-an-open-redirector)
 - [Theft of authorization codes](#theft-of-authorization-codes)
+- [Theft of tokens](#theft-of-tokens)
 
 ## CSRF attack against the client
 
@@ -215,3 +216,25 @@ If the attacker hijacked the authorization code, can they “steal” anything, 
 
 Remember that the authorization code is still an intermediate step between the OAuth client and the access token, which is the final goal of the attacker. To trade the authorization code for an access token, the `client_secret` is needed, and this is something that must be closely protected. But if the client is a public client, it will have no client secret and therefore the authorization code can be used by anyone. With a confidential client, an attacker can either try to maliciously obtain the client secret, as
 seen in section [CSRF attack against the client](#csrf-attack-against-the-client), or attempt to trick the OAuth client into performing a sort of CSRF similar to the one we have seen in section 7.1. We’re going to describe the latter case in chapter 9 and view its effects there.
+
+## Theft of tokens
+
+The ultimate goal for an attacker that focuses their attention on an OAuth aware target is to steal an access token.
+
+We already saw how OAuth clients send access tokens to resource servers to consume APIs. This is usually done by passing the bearer token as a request header (Authorization: Bearer access_token_value). 
+
+RFC 6750 defines two other ways to pass the bearer token along. One of those, the URI queryparameter,14 states that clients can send the access token in the URI using the `access_token` query parameter. Although the simplicity makes its use tempting, there are many drawbacks:
+
+- The access token ends up being logged in `access.log` files as part of the URI.
+
+- People tend to be indiscriminate in what they copy and paste in a public forum when searching for answers (for example, Stackoverflow). This might well end up having the access token being pasted in one of these forums through HTTP transcripts or access URLs. 
+
+- There is a risk of access token leakage through the referrer similar to the one we have seen in the previous section, because the referrer includes the entire URL. 
+
+Let’s assume there is an OAuth client that sends the access token in the URI to the resource server, using something like the following:
+
+```
+https://oauthapi.com/data/feed/api/user.html?access_token=2YotnFZFEjr1zCsicMWp
+```
+
+If an attacker is able to place even a simple link to this target page (data/feed/api/user.html) then the Referer header will disclose the access token.
