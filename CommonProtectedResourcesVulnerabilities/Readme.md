@@ -7,6 +7,7 @@ In this chapter, we’re going to learn how to design resource endpoints to mini
 - [How are protected resources vulnerable?](#how-are-protected-resources-vulnerable)
 - [Design of a protected resource endpoint](#design-of-a-protected-resource-endpoint)
 	- [How to protect a resource endpoint](#how-to-protect-a-resource-endpoint)
+	- [Adding implicit grant support](#adding-implicit-grant-support)
 
 ## How are protected resources vulnerable?
 
@@ -259,3 +260,27 @@ Some room for improvement exists here and it’s called the **Content Security P
 This topic deserves a chapter of its own and isn’t the main focus of this book; including the proper CSP header field is left as an exercise for the reader.
 
 A resource server can do one final thing to eliminate any chance that a particular endpoint is susceptible to XSS: choose not to support the access_token being passed as a request parameter.8 Doing so would make an XSS on the endpoint theoretically possible but not exploitable because there is no way an attacker can forge a URI that also contains the access token (now expected to be sent in the Authorization: Bearer header). This might sound too restrictive, and there might be valid cases in which using this request parameter is the only possible solution in a particular situation. However, all such cases should be treated as exceptions and approached with proper caution.
+
+### Adding implicit grant support
+
+All the security concerns discussed in the previous section stand, but we need to take care of some extra factors.
+
+When you try to get the resource, you’ll encounter an issue:
+
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://localhost:9002/helloWorld. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing).
+```
+
+What, then, is that all about? The browser is trying to tell us that we’re attempting to do something illegal: we’re trying to use JavaScript to call a URL with a different origin, hence violating the same origin policy that browsers enforce.
+
+**Definition of an origin**
+
+Two pages have the same origin if the protocol, port (if one is specified), and host are the same for both pages. You'll see this referred to as the "scheme/host/port tuple" at times (where a "tuple" is a set of three components that together comprise a whole).
+
+The following table gives examples of origin comparisons to the URL:
+
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonProtectedResourcesVulnerabilities/Images/cprv4.PNG" />
+
+In particular, from the implicit client running on `http://127.0.0.1:9000`, we’re trying to implement an AJAX request to `http://127.0.0.1:9002`. In essence, the same origin policy states that “browser windows can work in contexts of each other only if they are from served from the same base URL, consisting of `protocol://domain:port`.”
+
+The same origin policy is set up to keep JavaScript inside one page from loading malicious content from another domain. But in this case, it’s fine to allowing a JavaScript call to our API, especially since we’re protecting that API with OAuth to begin with. To solve this, we get a solution straight from the W3C specification: **cross-origin resource sharing (CORS)**.
