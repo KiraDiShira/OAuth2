@@ -7,6 +7,7 @@
 - [Registration of the redirect URI](#registration-of-the-redirect-uri)
   - [Stealing the authorization code through the referrer](#stealing-the-authorization-code-through-the-referrer)
   - [Stealing the token through an open redirector](#stealing-the-token-through-an-open-redirector)
+- [Theft of authorization codes](#theft-of-authorization-codes)
 
 ## CSRF attack against the client
 
@@ -207,3 +208,10 @@ https://attacker.com#access_token=2YotnFZFEjr1zCsicMWpAA
 Now it’s trivial for the attacker to steal the access token.
 
 Both the attacks discussed above can be mitigated by the same simple practice. By registering the most specific redirect_uri possible, that would correspond to `https://yourouauthclient.com/oauth/oauthprovider/callback` in our example, the client can avoid having the attacker take over control of its OAuth domain. Obviously, you need to design your client application to avoid letting an attacker create a page under `https://yourouauthclient.com/oauth/oauthprovider/callback` as well; otherwise, you’re back to square one. However, the more specific and direct the registration is, the less likely it is for there to be a matching URI under the control of a malicious party.
+
+## Theft of authorization codes
+
+If the attacker hijacked the authorization code, can they “steal” anything, such as the resource owner’s personal information as email, contact information, and so on? Not quite yet. 
+
+Remember that the authorization code is still an intermediate step between the OAuth client and the access token, which is the final goal of the attacker. To trade the authorization code for an access token, the `client_secret` is needed, and this is something that must be closely protected. But if the client is a public client, it will have no client secret and therefore the authorization code can be used by anyone. With a confidential client, an attacker can either try to maliciously obtain the client secret, as
+seen in section [CSRF attack against the client](#csrf-attack-against-the-client), or attempt to trick the OAuth client into performing a sort of CSRF similar to the one we have seen in section 7.1. We’re going to describe the latter case in chapter 9 and view its effects there.
