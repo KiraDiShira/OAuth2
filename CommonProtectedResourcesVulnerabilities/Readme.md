@@ -84,7 +84,7 @@ http://localhost:9002/helloWorld?access_token=TOKEN&language=<script>alert('XSS'
 
 When the victim clicks on it, the attack is completed, forcing the JavaScript to execute:
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonProtectedResourcesVulnerabilities/Images/cprv1.PNG" />
 
 At this point, the recommended approach is to properly escape all untrusted data. We’re using URL encoding here.
 
@@ -124,7 +124,7 @@ Error, invalid language:
 
 Consequently, the browser will render the response without executing the rouge script.
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonProtectedResourcesVulnerabilities/Images/cprv2.PNG" />
 
 The problem with output sanitization is that developers often forget about it, and even if they forget to validate one single input field, we’re back to square one in terms of XSS protection. Browser vendors try hard to stop XSS and ship a series of features as mitigation, one of the most important being returning the right Content-Type for the protected resource endpoint.
 
@@ -209,7 +209,7 @@ Connection: keep-alive
 
 If we try this straight in the browser, we can appreciate that having the proper Content-Type immediately stops the attack on its own
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonProtectedResourcesVulnerabilities/Images/cprv3.PNG" />
 
 It’s still entirely possible for a poorly written client application to inject the JSON output into an HTML page without escaping the string, which would lead to the execution of the malicious code. As we said, this is just a mitigation, and it’s still a good practice to always sanitize the output. We combine these into the following:
 
