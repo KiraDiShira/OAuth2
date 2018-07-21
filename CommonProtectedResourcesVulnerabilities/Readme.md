@@ -284,3 +284,25 @@ The following table gives examples of origin comparisons to the URL:
 In particular, from the implicit client running on `http://127.0.0.1:9000`, we’re trying to implement an AJAX request to `http://127.0.0.1:9002`. In essence, the same origin policy states that “browser windows can work in contexts of each other only if they are from served from the same base URL, consisting of `protocol://domain:port`.”
 
 The same origin policy is set up to keep JavaScript inside one page from loading malicious content from another domain. But in this case, it’s fine to allowing a JavaScript call to our API, especially since we’re protecting that API with OAuth to begin with. To solve this, we get a solution straight from the W3C specification: **cross-origin resource sharing (CORS)**.
+
+```
+> curl -v -H "Authorization: Bearer TOKEN" http://localhost:9002/helloWorld?language=en
+```
+with CORS enable gives
+
+```
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Content-Type: application/json; charset=utf-8
+Content-Length: 33
+Date: Fri, 29 Jan 2016 17:42:01 GMT
+Connection: keep-alive
+{
+	"greeting": "Hello World"
+}
+```
+
+This new header tells our browser, which is hosting the JavaScript application, that it’s OK to allow any origin to call this endpoint.
