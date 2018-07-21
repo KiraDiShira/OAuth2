@@ -8,6 +8,7 @@ In this chapter, we’re going to learn how to design resource endpoints to mini
 - [Design of a protected resource endpoint](#design-of-a-protected-resource-endpoint)
 	- [How to protect a resource endpoint](#how-to-protect-a-resource-endpoint)
 	- [Adding implicit grant support](#adding-implicit-grant-support)
+- [Token replays](#token-replays)
 
 ## How are protected resources vulnerable?
 
@@ -306,3 +307,39 @@ Connection: keep-alive
 ```
 
 This new header tells our browser, which is hosting the JavaScript application, that it’s OK to allow any origin to call this endpoint.
+
+## Token replays
+
+In the previous chapter, we saw how it’s possible to steal an access token. Even if the protected resource runs over HTTPS, once the attacker gets their hands on the access token they will be able to access the protected resource. For this reason, it’s important to have an access token that has a relatively short lifetime to minimize the risk of token replay. Indeed, even if an attacker manages to get hold of a victim access token, if it has already expired (or is close to being expired) the severity of the attack decreases.
+
+One of the main differences of OAuth 2.0 and its predecessor is the fact that the core framework is free of cryptography. Instead, it relies completely on the presence of Transport Layer Security (TLS) across the various connections. For this reason, it’s considered best practice to enforce the usage of TLS as much as possible throughout an OAuth ecosystem. Again, another standard comes to the rescue: HTTP Strict Transport Security (HSTS)13 defined in RFC6797.14 HSTS allows web servers to declare that browsers (or other complying user agents) should interact with it only using secure HTTPS connections, never via the insecure HTTP protocol. Integrating HSTS in our endpoint is straightforward and, like CORS, requires adding a couple of extra headers.
+
+```js
+res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+```
+
+and now when you try to hit the /helloWorld endpoint from an HTTP client:
+
+```
+> curl -v -H "Authorization: Bearer TOKEN" http://localhost:9002/helloWorld?language=en
+```
+
+you can notice the HSTS response header
+
+```
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000
+Content-Type: application/json; charset=utf-8
+Content-Length: 33
+Date: Fri, 29 Jan 2016 20:13:06 GMT
+Connection: keep-alive
+{
+	"greeting": "Hello World"
+}
+```
+
+At this point, every time you try to hit the endpoint with the browser using HTTP (not over TLS), you would notice an internal 307 redirect made from the browser. This will avoid any unexpected unencrypted communication (like protocol downgrade attacks). Our test environment doesn’t use TLS at all, so this header effectively makes our resource completely inaccessible. Although this is, of course, very secure, it’s not particularly useful as a resource. A production system with a real API will need to balance both security and accessibility.
