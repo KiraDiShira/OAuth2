@@ -4,6 +4,10 @@
 
 In this chapter, we’re going to learn how to design resource endpoints to minimize the risk of token spoofing and token replay.
 
+- [How are protected resources vulnerable?](#how-are-protected-resources-vulnerable)
+- [Design of a protected resource endpoint](#design-of-a-protected-resource-endpoint)
+	- [How to protect a resource endpoint](#how-to-protect-a-resource-endpoint)
+
 ## How are protected resources vulnerable?
 
 The endpoints can be vulnerable to cross-site scripting (XSS) attacks. Indeed, if the resource server chooses to support `access_token` as a URI parameter, the attacker can forge a URI containing the XSS attack and then use social engineering to trick a victim into following that link. When someone clicks on that link,  the malicious JavaScript is then executed. 
