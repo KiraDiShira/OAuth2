@@ -238,3 +238,25 @@ https://oauthapi.com/data/feed/api/user.html?access_token=2YotnFZFEjr1zCsicMWp
 ```
 
 If an attacker is able to place even a simple link to this target page (data/feed/api/user.html) then the Referer header will disclose the access token.
+
+## Native applications best practices
+
+Historically, one of the weaknesses of OAuth was a poor end-user experience on mobile devices. 
+
+To help smooth the user experience, it was common for native OAuth clients to leverage a `web-view` component when sending the user to the authorization server’s authorization endpoint (interacting with the front channel). A `web-view` is a system component that allows applications to display web content within the UI of an application. The `web-view` acts as an embedded useragent, separate from the system browser. 
+
+Unfortunately, the web-view has a long history of security vulnerabilities and concerns that come with it. Most notably, the client applications can inspect the contents of the web-view component, and would therefore be able to eavesdrop on the end-user credentials when they authenticated to the authorization server. 
+
+Since a major focus of OAuth is keeping the user’s credentials out of the hands of the client applications entirely, this is counterproductive. The usability of the web-view component is far from ideal. Because it’s embedded inside the application itself, the web-view doesn’t have access to the system browser’s cookies, memory, or session information. Accordingly, the web-view doesn’t have access to any existing authentication sessions, forcing users to sign in multiple times.
+
+Native OAuth clients can make HTTP requests exclusively through external useragents such as the system browser (as we have done in the native application we built in chapter 6). A great advantage of using a system browser is that the resource owner is able to see the URI address bar, which acts as a great anti-phishing defense. It also helps train users to put their credentials only into trusted websites and not into any application that asks for them.
+
+In recent mobile operating systems, a third option has been added that combines the best of both of these approaches. In this mode, a special web-view style component is made available to the application developer. This component can be embedded within the application as in a traditional web-view. However, this new component shares the same security model as the system browser itself, allowing single-sign-on user experiences. Furthermore, it isn’t able to be inspected by the host application, leading to greater security separation on par with using an external system browser. 
+
+In order to capture this and other security and usability issues that are unique to native applications, the OAuth working group is working on a new document called “OAuth 2.0 for Native Apps.”18 Other recommendations listed in the document include the following:
+
+- For custom redirect URI schemes, pick a scheme that is globally unique and which you can assert ownership over. One way of doing this is to use reversed DNS notation, as we have done in our example application: `com.oauthinaction.mynativeapp:/`. This approach is a good way to avoid clashing with schemes used by other applications that could lead to a potential authorization code interception attack.
+
+- In order to mitigate some of the risk associated with authorization code interception attack, it’s a good idea to use Proof Key for Code Exchange (PKCE). We’ll discuss PKCE in detail in chapter 10.
+
+These simple considerations can substantially improve the security and usability of native applications that use OAuth.
