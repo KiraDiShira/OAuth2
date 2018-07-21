@@ -9,6 +9,7 @@
   - [Stealing the token through an open redirector](#stealing-the-token-through-an-open-redirector)
 - [Theft of authorization codes](#theft-of-authorization-codes)
 - [Theft of tokens](#theft-of-tokens)
+- [Native applications best practices](#native-applications-best-practices)
 
 ## CSRF attack against the client
 
