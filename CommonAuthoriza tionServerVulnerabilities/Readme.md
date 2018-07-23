@@ -4,6 +4,7 @@
 
 - [Session hijacking](#session-hijacking)
 - [Client impersonation](#client-impersonation)
+- [Open redirector](#open-redirector)
 
 ## Session hijacking
 
@@ -74,3 +75,79 @@ if (code.request.redirect_uri) {
 ```
 
 When the OAuth client presents the hijacked authorization code to the authorization server, the authorization server will now ensure that the redirect_uri presented in the initial authorization request will match the one presented in the token request. Since the client isn’t expecting to send anyone to the attacker’s site, these values will never match and the attack fails. Having this simple check in place is extremely important and can negate many common attacks on the authorization code grant.
+
+## Open redirector
+
+In this section, we will see how implementing the OAuth core specification verbatim might lead to having the authorization server acting as an open redirector. Now it’s important to outline that if this is a deliberate choice, it’s not necessarily bad; an open redirector on its own isn’t guaranteed to cause problems, even though it’s considered bad design.
+
+If an authorization server receives an invalid request parameter, such as an invalid scope, the resource owner is redirected to the client’s registered redirect_uri.
+
+We can see this behavior implemented in chapter 5:
+
+```js
+if (__.difference(rscope, cscope).length > 0) {
+  var urlParsed = buildUrl(query.redirect_uri, {
+    error: ‘invalid_scope’
+  });
+  res.redirect(urlParsed);
+  return;
+}
+```
+
+```
+http://localhost:9001/authorize?client_id=oauth-client-1&redirect_uri=http://localhost:9000/callback&scope=WRONG_SCOPE
+```
+What you see is your browser being redirected to
+```
+http://localhost:9000/callback?error=invalid_scope
+```
+
+The issue is also that the authorization server may be allowing client registrations with an arbitrary redirect_uri. Now you might argue that this is ONLY an open redirect and there isn’t much you can do with it, right? Not really. Let’s assume that an attacker does the following:
+
+- Registers a new client to the https://victim.com authorization server.
+- Registers a redirect_uri such as https://attacker.com.
+
+Then the attacker can craft a special URI of the form:
+
+```
+https://victim.com/authorize?response_type=code&client_id=bc88FitX1298KPj2WS259
+BBMa9_KCfL3&scope=WRONG_SCOPE&redirect_uri=https://attacker.com
+```
+
+This should redirect back to https://attacker.com (without any user interaction, ever), meeting the definition of an open redirector.  What then? For many attacks, access to an open redirector is only one small part of the attack chain, but it’s an essential one. And what could be better, from the attacker’s perspective, than if a trusted OAuth provider gives you one out of the box? 
+
+If the authorization server is pattern matching the redirect_uri (as seen previously, such as allowing subdirectory) and has an uncompromised public client that shares the same domain as the authorization server, the attacker can use a redirect error redirection to intercept redirect-based protocol messages via the Referer header and URI fragment. In this scenario the attacker does the following:
+
+- Registers a new client to the https://victim.com authorization server.
+
+- Registers a redirect_uri such as https://attacker.com.
+
+- Creates an invalid authentication request URI for the malicious client. As an example he can use a wrong or nonexistent scope (as seen previously): https://victim.com/authorize?response_type=code&client_id=bc88FitX1298KPj2WS259BBMa9_KCfL3&scope=WRONG_SCOPE&redirecturi=https://attacker.com
+
+- Crafts a malicious URI targeting the good client that uses the redirect URI to send a request to the malicious client, using the URI in the previous step: https://victim.com/authorize?response_type=token&client_id=goodclient&scope=VALID_SCOPE&redirect_uri=https%3A%2F%2Fvictim.com%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3Dattackerclient-id%26scope%3DWRONG_SCOPE%26redirect_uri%3Dhttps%3A%2F%2Fattacker.com
+
+- If the victim has already used the OAuth client (good-client) and if the authorization server supports TOFU (not prompting the user again), the attacker will receive the response redirected to https://attacker.com: the legitimate OAuth Authorization response will include an access token in the URI fragment. Most web browsers will append the fragment to the URI sent in the location header of a 30x response if no fragment is included in the location URI.
+
+If the authorization request is code instead of a token, the same technique is used, but the code is leaked by the browser in the Referer header rather than the fragment. A draft for an OAuth security addendum that should provide better advice to implementers was recently proposed.12 One of the mitigations included in the draft is to respond with an HTTP 400 (Bad Request) status code rather than to redirect back to the registered redirect_uri.
+
+```js
+if (__.difference(rscope, client.scope).length > 0) {
+  res.status(400).render(‘error’, {error: ‘invalid_scope’});
+  return;
+}
+```
+
+Other proposed mitigations include the following:
+
+- Perform a redirect to an intermediate URI under the control of the authorization server to clear Referer information in the browser that may contain security token information.
+- Append ‘#’ to the error redirect URI (this prevents the browser from reattaching the fragment from a previous URI to the new location URI).
+
+## Summary
+
+- Burn the authorization code once it’s been used.
+
+- Exact matching is the ONLY safe validation method for redirect_uri that the authorization server should adopt.
+
+- Implementing the OAuth core specification verbatim might lead us to have the authorization server acting as an open redirector. If this is a properly monitored redirector, this is fine, but it might pose some threats if implemented naively.
+
+- Be mindful of information that can leak through fragments or Referer headers during error reporting.
