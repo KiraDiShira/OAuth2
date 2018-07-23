@@ -4,6 +4,7 @@
 
 - [What is a bearer token?](#what-is-a-bearer-token)
 - [Risks and considerations of using bearer tokens](#risks-and-considerations-of-using-bearer-tokens)
+- [How to protect bearer tokens](#how-to-protect-bearer-tokens)
 
 ## What is a bearer token?
 
@@ -31,3 +32,7 @@ Apart from token hijacking (which we’ve covered in depth in many parts of this
 **Token redirect**. An attacker uses a token generated for consumption by one resource server to gain access to a different resource server that mistakenly believes the token to be valid for it. In this case, an attacker legitimately obtains an access token for a specific resource server and they try to present this access token to a different one.
 
 **Token disclosure**. A token might contain sensitive information about the system and the attacker is then something that they couldn’t know otherwise. Information disclosure can be considered a minor problem compared with the previous one, but it’s still something we need to care about.
+
+## How to protect bearer tokens
+
+It is of extreme importance that access tokens sent as bearer tokens are not sent in the clear over an insecure channel. As per the core OAuth specification, transmission of access tokens must be protected using end-to-end confidentiality, such as SSL/TLS.
