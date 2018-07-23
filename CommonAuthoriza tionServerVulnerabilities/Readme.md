@@ -1,4 +1,8 @@
+[index](https://github.com/KiraDiShira/OAuth2/blob/master/README.md#oauth2)
+
 # Common authorization server vulnerabilities
+
+- [Session hijacking](#session-hijacking)
 
 ## Session hijacking
 
