@@ -5,6 +5,7 @@
 - [What is a bearer token?](#what-is-a-bearer-token)
 - [Risks and considerations of using bearer tokens](#risks-and-considerations-of-using-bearer-tokens)
 - [How to protect bearer tokens](#how-to-protect-bearer-tokens)
+- [Authorization code](#authorization-code)
 
 ## What is a bearer token?
 
@@ -66,3 +67,9 @@ The resource server should also properly validate the token and avoid the use of
 Although it’s common for a protected resource to cache the current status of a token, especially when using a protocol such as token introspection as discussed in chapter 11, the protected resource must always weigh the benefits and drawbacks of such a cache. 
 
 It’s also a good idea to use rate limiting and other techniques to protect the API, which help prevent attackers from fishing for valid tokens at the protected resource.
+
+## Authorization code
+
+The authorization code isn’t useful on its own, especially if the client has its own client secret with which it can authenticate itself. However, native applications, have specific problems with client secrets. Dynamic registration, discussed in chapter 12, is one approach to this problem, but it’s not always available or appropriate for a given client application. In order to mitigate such attacks against public clients, the OAuth working group released an additional specification that hinders such attack vectors, Proof Key for Code Exchange (PKCE, pronounced “pixie”).
+
+### Proof Key for Code Exchange (PKCE)
