@@ -3,6 +3,7 @@
 # Common authorization server vulnerabilities
 
 - [Session hijacking](#session-hijacking)
+- [Client impersonation](#client-impersonation)
 
 ## Session hijacking
 
@@ -48,3 +49,28 @@ This is needed in order to cover one of the other bullets in section 4.1.3 of RF
 ```
 ensure that the authorization code was issued to the authenticated confidential client, or if the client is public, ensure that the code was issued to “client_id” in the request,
 ```
+
+## Client impersonation
+
+All the techniques we’ve seen used to steal the authorization code were related to some sort of `redirect_uri` manipulation.
+
+The registered `redirect_uri` didn’t exactly match the one provided in the OAuth request. Nevertheless, the attacker hijacked the authorization code though a maliciously crafted URI.
+
+Now what an attacker can do is to present this hijacked authorization code to the OAuth callback of the victim’s OAuth client. At this point, the client will proceed and try to trade the authorization code for an access token, presenting valid client credentials to the authorization server. The authorization code is bound to the correct OAuth client.
+
+The result is that the attacker is able to successfully consume the hijacked authorization code and steal the protected resource of a target victim.
+
+Let’s see how we can fix this in our code base.
+
+In the file, locate the authorization server’s token endpoint and specifically the part that processes authorization grant request, then add the following snippet of code:
+
+```js
+if (code.request.redirect_uri) {
+  if (code.request.redirect_uri != req.body.redirect_uri) {
+    res.status(400).json({error: ‘invalid_grant’});
+    return;
+  }
+}
+```
+
+When the OAuth client presents the hijacked authorization code to the authorization server, the authorization server will now ensure that the redirect_uri presented in the initial authorization request will match the one presented in the token request. Since the client isn’t expecting to send anyone to the attacker’s site, these values will never match and the attack fails. Having this simple check in place is extremely important and can negate many common attacks on the authorization code grant.
