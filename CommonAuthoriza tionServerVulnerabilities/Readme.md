@@ -5,6 +5,7 @@
 - [Session hijacking](#session-hijacking)
 - [Client impersonation](#client-impersonation)
 - [Open redirector](#open-redirector)
+- [Summary](#summary)
 
 ## Session hijacking
 
