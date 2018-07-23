@@ -23,11 +23,11 @@ Connection: keep-alive
 
 The value of the authorization code is a one-time-use credential and it represents the result of the resource owner’s authorization decision. We want to highlight that for confidential clients the authorization code leaves the server and passes through the user agent, hence it will persist in the browser history.
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonAuthoriza%20tionServerVulnerabilities/Images/casv1.PNG" />
 
 Let’s consider the following scenario. Imagine there is a web server, let’s call it Site A, that consumes some REST APIs as an OAuth client. A resource owner accesses Site A in a library or some other location with a shared computer. Site A uses the authorization code grant (see chapter 2 for details) to get its OAuth tokens. This will imply that a login to the authorization server is required. As a result of using the site, the authorization code will remain in the browser history (as seen in figure 9.1). When the resource owner finishes, they will almost certainly log out of Site A, and might even log out of the authorization server, but they won’t likely clean their browser history. At this stage, an attacker that also uses Site A will get on the computer. The attacker will log in with their own credentials but will tamper with the redirect to Site A and inject the authorization code from the previous resource owner’s session stored in the browser history. What will happen is that, despite the fact the attacker is logged in with their own credentials, they will have access to the resource of the original resource owner.
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonAuthoriza%20tionServerVulnerabilities/Images/casv2.PNG" />
 
 It turns out that the OAuth core specification1 gives us a solution to this problem in section 4.1.3:
 
