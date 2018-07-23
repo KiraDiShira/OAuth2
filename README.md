@@ -8,4 +8,5 @@
 - [OAuth2 in the real world](https://github.com/KiraDiShira/OAuth2/tree/master/OAuth2RealWorld#oauth-20-in-the-real-world)
 - [Common client vulnerabilities](https://github.com/KiraDiShira/OAuth2/blob/master/CommonClientVulnerabilities/Readme.md#common-client-vulnerabilities)
 - [Common protected resources vulnerabilities](https://github.com/KiraDiShira/OAuth2/tree/master/CommonProtectedResourcesVulnerabilities#common-protected-resources-vulnerabilities)
-- [CommonAuthoriza tionServerVulnerabilities]()
+- [CommonAuthorizationServerVulnerabilities](https://github.com/KiraDiShira/OAuth2/tree/master/CommonAuthoriza%20tionServerVulnerabilities#common-authorization-server-vulnerabilities)
+- [Common OAuth token vulnerabilities]()
