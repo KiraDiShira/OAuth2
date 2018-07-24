@@ -10,3 +10,4 @@
 - [Common protected resources vulnerabilities](https://github.com/KiraDiShira/OAuth2/tree/master/CommonProtectedResourcesVulnerabilities#common-protected-resources-vulnerabilities)
 - [CommonAuthorizationServerVulnerabilities](https://github.com/KiraDiShira/OAuth2/tree/master/CommonAuthoriza%20tionServerVulnerabilities#common-authorization-server-vulnerabilities)
 - [Common OAuth token vulnerabilities](https://github.com/KiraDiShira/OAuth2/blob/master/CommonOAuthTokenVulnerabilities/readme.md#common-oauth-token-vulnerabilities)
+- [OAuth tokens]()
