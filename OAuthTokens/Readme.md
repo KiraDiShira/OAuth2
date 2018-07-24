@@ -81,4 +81,4 @@ In addition to a general data structure, JWT also gives us a set of **claims** f
 
 We can also add any additional fields that we need for our specific application. In our previous example token, we’ve added the name and admin fields to the payload.
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthTokens/Images/ot1.PNG" />
