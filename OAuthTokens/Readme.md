@@ -82,3 +82,72 @@ In addition to a general data structure, JWT also gives us a set of **claims** f
 We can also add any additional fields that we need for our specific application. In our previous example token, we’ve added the name and admin fields to the payload.
 
 <img src="https://github.com/KiraDiShira/OAuth2/blob/master/OAuthTokens/Images/ot1.PNG" />
+
+### Implementing JWT in our servers
+
+In chapter 5 we created a server that issued unstructured, randomized tokens. We’ll be modifying the server to produce unsigned JWT formatted tokens here. 
+
+Although we do recommend using a JWT library in practice, we’ll be producing our JWTs by hand so that you can get a feel for what goes into these tokens.
+
+Starting by commenting out (or deleting) the following line:
+
+```js
+var access_token = randomstring.generate();
+```
+
+We’re going to indicate that this token is a JWT and that it’s unsigned.
+
+```js
+var header = { 'typ': 'JWT', 'alg': 'none' };
+```
+
+```js
+var payload = {
+  iss: 'http://localhost:9001/',
+  sub: code.user ? code.user.sub : undefined,
+  aud: 'http://localhost:9002/',
+  iat: Math.floor(Date.now() / 1000),
+  exp: Math.floor(Date.now() / 1000) + (5 * 60),
+  jti: randomstring.generate(8)
+};
+```
+
+```js
+var access_token = base64url.encode(JSON.stringify(header))
++ '.'
++ base64url.encode(JSON.stringify(payload))
++ '.';
+```
+
+Notice that our token now has an expiration associated with it, but the client doesn’t have to do anything special with that change. The client can keep using the token until it stops working, at which point the client will go get another token as usual. The authorization server is allowed to provide an expiration hint to the client using the `expires_in` field of the token response, but the client doesn’t even have to do anything with that either, and most clients don’t.
+
+Now it’s time to have our protected resource check the incoming token for its information instead of looking up the token value in a database. Open up protectedResource. js and find the code that processes the incoming token. First we need to parse the token by performing the opposite actions that the authorization server used to create it: we split it on the dot characters to get the different sections. Then we’ll decode the second part, the payload, from Base64 URL and parse the result as a JSON object.
+
+```js
+var tokenParts = inToken.split('.');
+var payload = JSON.parse(base64url.decode(tokenParts[1]));
+```
+
+This gives us a native data structure that we can check in our application. We’re going to make sure that the token is coming from the expected issuer, that its timestamps fit the right ranges, and that our resource server is the intended audience of the token. Although these kinds of checks are often strung together with boolean logic, we’ve broken these out into individual if statements so that each check can be read more clearly and independently.
+
+```js
+if (payload.iss == 'http://localhost:9001/') {
+  if ((Array.isArray(payload.aud) && __.contains(payload.aud, 'http://localhost:9002/')) ||
+    payload.aud == 'http://localhost:9002/') {
+      var now = Math.floor(Date.now() / 1000);
+      if (payload.iat <= now) {
+        if (payload.exp >= now) {
+          req.access_token = payload;
+        }
+      }
+  }
+}
+```
+If all of those checks pass, we’ll hand the token’s parsed payload on to the rest of the application, which can make authorization decisions based on fields such as the subject, if it so chooses.
+
+Remember, the payload of a JWT is a JSON object, which our protected resource can now access directly from the request object. From here it’s up to the other handler functions to determine whether this particular token is good enough to serve the requests in question, as we did when the token was stored in the shared database.
+
+The attributes included in the token’s body in our example don’t say that much, but we could easily include information about the client, resource owner, scopes, or other information pertinent to the protected resource’s decision.
+
+We haven’t had to change our client code at all, even though the tokens that are being issued are different from what were being issued before. This is all thanks to the tokens being opaque to the client, which is a key simplifying factor in OAuth 2.0. In fact, the authorization server could have picked many different kinds of token formats without any change to the client software.
+It’s good that we can now carry information in the token itself, but is that enough?
