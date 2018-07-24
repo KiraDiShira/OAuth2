@@ -4,6 +4,7 @@
 
 - [What are OAuth tokens?](#what-are-oauth-tokens)
 - [Structured tokens: JSON Web Token (JWT)](#structured-tokens-json-web-token-jwt)
+- [Cryptographic protection of tokens: JSON Object Signing and Encryption (JOSE)](#cryptographic-protection-of-tokens-json-object-signing-and-encryption-jose)
 
 ## What are OAuth tokens?
 
