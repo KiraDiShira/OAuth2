@@ -1,4 +1,6 @@
-# OAu1th tokens
+# OAuth tokens
+
+- [What are OAuth tokens?](#what-are-oauth-tokens)
 
 ## What are OAuth tokens?
 
