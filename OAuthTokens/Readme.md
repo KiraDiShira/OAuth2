@@ -3,6 +3,7 @@
 # OAuth tokens
 
 - [What are OAuth tokens?](#what-are-oauth-tokens)
+- [Structured tokens: JSON Web Token (JWT)](#structured-tokens-json-web-token-jwt)
 
 ## What are OAuth tokens?
 
@@ -73,3 +74,11 @@ Part of the answer comes from the places where a JWT will typically find itself:
 For example, in order to send a JSON object over an HTTP form parameter, the opening and closing brackets { and } would need to be encoded as %7B and %7D, respectively. Quotation marks, colons, and other common characters would also need to be encoded to their appropriate entity codes. Even something as common as the space character could be encoded as either %20 or +, depending on the location of the token. Additionally, in many cases, the % character used for encoding itself needs to be encoded, often leading to accidental double-encoding of the values.
 
 By natively using the Base64URL encoding scheme, JWT can be placed safely in any of these common locations without any additional encoding. Furthermore, since the JSON objects are coming through as an encoded string, they’re less likely to be processed and reserialized by processing middleware, which we’ll see is important in the next section. This kind of transportation-resistant armor is attractive to deployments and developers, and it’s helped JWT find a foothold where other security token formats have faltered.
+
+### JWT claims
+
+In addition to a general data structure, JWT also gives us a set of **claims** for use across different applications. Although a JWT can contain any valid JSON data, these claims provide support for common operations that involve these kinds of tokens. All of these fields are optional in a JWT, but specific services are allowed to define their own inclusion requirements.
+
+We can also add any additional fields that we need for our specific application. In our previous example token, we’ve added the name and admin fields to the payload.
+
+<img src="" />
