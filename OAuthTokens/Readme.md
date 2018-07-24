@@ -1,3 +1,5 @@
+[index](https://github.com/KiraDiShira/OAuth2/blob/master/README.md#oauth2)
+
 # OAuth tokens
 
 - [What are OAuth tokens?](#what-are-oauth-tokens)
