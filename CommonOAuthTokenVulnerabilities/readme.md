@@ -6,6 +6,7 @@
 - [Risks and considerations of using bearer tokens](#risks-and-considerations-of-using-bearer-tokens)
 - [How to protect bearer tokens](#how-to-protect-bearer-tokens)
 - [Authorization code](#authorization-code)
+- [Summary](#summary)
 
 ## What is a bearer token?
 
