@@ -85,7 +85,7 @@ OAuth 2.0 public clients using the authorization code grant are susceptible to t
 - The server recomputes the `code_challenge`, and checks to see whether it matches the original. An error response is returned if they
 aren’t equal, and the transaction continues as normal if they are.
 
-<img src="" />
+<img src="https://github.com/KiraDiShira/OAuth2/blob/master/CommonOAuthTokenVulnerabilities/Images/cotv1.PNG" />
 
 Notice that even though PKCE is intended for use with public clients, confidential clients can use this method as well.
 
