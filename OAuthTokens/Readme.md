@@ -151,3 +151,15 @@ The attributes included in the token’s body in our example don’t say that mu
 
 We haven’t had to change our client code at all, even though the tokens that are being issued are different from what were being issued before. This is all thanks to the tokens being opaque to the client, which is a key simplifying factor in OAuth 2.0. In fact, the authorization server could have picked many different kinds of token formats without any change to the client software.
 It’s good that we can now carry information in the token itself, but is that enough?
+
+## Cryptographic protection of tokens: JSON Object Signing and Encryption (JOSE)
+
+If the authorization server outputs a token that is not protected in any way, and the protected resource trusts what’s inside that token without any other checks, then it’s trivial for the client, which receives the token in plain text, to manipulate the content of the token before presenting it to the protected resource. A client could even make up its own token out of whole cloth without ever talking to the authorization server, and a naïve resource server would simply accept and process it.
+
+Since we almost certainly do not want that to happen, we should add some protection to this token. Thankfully for us, there’s a whole suite of specifications that tell us exactly how to do this: the **JSON Object Signing and Encryption standards**, or **JOSE**.
+
+This suite provides signatures (JSON Web Signatures, or **JWS**), encryption (JSON Web Encryption, or **JWE**), and even key storage formats (JSON Web Keys, or **JWK**) using JSON as the base data model. The unsigned JWT that we built by hand in the last section is merely a special case of an unsigned JWS object with a JSON-based payload. 
+
+Although the details of JOSE could fill a book on its own, we’re going to look at two common cases: symmetric signing and validation using the HMAC signature scheme and asymmetric signing and validation using the RSA signature scheme. We’ll also be using JWK to store our public and private RSA keys.
+
+To do the heavy cryptographic lifting, we’re going to be using a JOSE library called JSRSASign. This library provides basic signing and key management capabilities, but it doesn’t provide encryption. We’ll leave encrypted tokens as an exercise for the reader.
