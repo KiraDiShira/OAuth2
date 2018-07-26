@@ -286,11 +286,11 @@ tAylYK4oiT_uEMgSkc4dxwKwGuBxSO0g9JOobgfy0--FUHHYtRi0dOFZw",
 This data is from the same key pair as the one in the authorization server, but it doesn’t contain the private key information (represented by the d element in an RSA key). The effect is that the protected resource can only verify incoming signed JWTs, but it cannot create them.
 
 **Do I have to copy my keys all over the place?**
-`
+```
 You might think it’s onerous to copy signing and verification keys between pieces of software like this, and you’d be right. If the authorization server ever decides to update its keys, all copies of the corresponding public key need to be updated in all protected resources downstream. For a large OAuth ecosystem, that can be problematic.
 
-One common approach, used by the OpenID Connect protocol that we’ll cover in chapter 13, is to have the authorization server publish its public key at a known URL. This will generally take the form of a JWK Set, which can contain multiple keys and looks something like this.`
-
+One common approach, used by the OpenID Connect protocol that we’ll cover in chapter 13, is to have the authorization server publish its public key at a known URL. This will generally take the form of a JWK Set, which can contain multiple keys and looks something like this.
+```
 ```js
 {
   "keys": [
@@ -308,7 +308,9 @@ ECG7_3Nx9n_s5to2ZtwJ1GS1maGjrSZ9GRAYLrHhndrL_8ie_9DS2T-ML7QNQtNkg2RvLv4f
   ]
 }
 ```
-`The protected resources can then fetch and cache this key as needed. This approach allows the authorization server to rotate its keys whenever it sees fit, or add new keys over time, and the changes will automatically propagate throughout the network.`
+```
+The protected resources can then fetch and cache this key as needed. This approach allows the authorization server to rotate its keys whenever it sees fit, or add new keys over time, and the changes will automatically propagate throughout the network.
+```
 
 Now we’ll use our library to validate the signatures of incoming tokens based on the server’s public key. Load up the public key into an object that our library can use, and then use that key to validate the token’s signature.
 
@@ -320,3 +322,11 @@ if (jose.jws.JWS.verify(inToken, publicKey, [header.alg])) {
 ```
 
 Now that this has been set up, the authorization server can choose to include additional information for the protected resource’s consumption, such as scopes or client identifiers.
+
+## Other token protection options
+
+The methods that we’ve gone over in these exercises aren’t the only JOSE-based means of protecting a token’s contents. For instance, we used the HS256 symmetric signature method previously, which provides a 256-byte hash of the token’s contents. JOSE also defines HS384 and HS512, both of which use larger hashes to provide increased security at the cost of larger token signatures. Similarly, we used the RS256 asymmetric signature method, which provides a 256-byte hash of the RSA signature output. JOSE also defines the RS384 and RS512 methods, with the same kinds of trade-offs as their symmetric counterparts. JOSE also defines the PS256, PS384, and PS512 signature methods, all based on a different RSA signature and hashing mechanism.
+
+JOSE also provides elliptical curve support, with the core standard referencing three curves and associated hashes in ES256, ES384, and ES512. Elliptical curve cryptography has several benefits over RSA cryptography, including smaller signature sizes and lower processing requirements for validation, but support for the underlying cryptographic functions isn’t nearly as widespread as RSA at the time of this writing. 
+
+On top of this, JOSE’s list of algorithms is extensible by new specifications, allowing new algorithms to be defined as they’re invented and needed. Sometimes signatures aren’t enough, though. With a token that’s only signed, the client could potentially peek at the token itself and find out things that it might not be privileged to know, such as a user identifier in the sub field. The good news is that in addition to signatures, JOSE provides an encryption mechanism called JWE with several different options and algorithms. Instead of a three-part structure, a JWT encrypted with JWE is a five-part structure. Each portion still uses Base64 URL encoding, and the payload is now an encrypted object that can’t be read without access to the appropriate key. Covering the JWE process is a bit much for this chapter, but for an advanced exercise try adding JWE to the tokens. First, give the resource server a key pair and give the authorization server access to the public key portion of this key pair. Then use the public key to encrypt the contents of the token using JWE. Finally, have the resource server decrypt the contents of the token using its own private key and pass the payload of the token along to the application. 
