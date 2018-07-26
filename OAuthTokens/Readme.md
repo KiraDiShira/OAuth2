@@ -164,3 +164,53 @@ This suite provides signatures (JSON Web Signatures, or **JWS**), encryption (JS
 Although the details of JOSE could fill a book on its own, we’re going to look at two common cases: symmetric signing and validation using the HMAC signature scheme and asymmetric signing and validation using the RSA signature scheme. We’ll also be using JWK to store our public and private RSA keys.
 
 To do the heavy cryptographic lifting, we’re going to be using a JOSE library called JSRSASign. This library provides basic signing and key management capabilities, but it doesn’t provide encryption. We’ll leave encrypted tokens as an exercise for the reader.
+
+### Symmetric signatures using HS256
+
+We’re going to sign our token using a shared secret at the authorization server and then validate that token using the shared secret at the protected resource.
+
+**authorizationServer.js**
+```js
+var header = { 'typ': 'JWT', 'alg': 'HS256'};
+```
+
+This time, instead of concatenating the strings together with dots, we’re going to use our JOSE library to apply the HMAC signature algorithm, using our shared secret, to the token. Due to a quirk in our chosen JOSE library, we need to pass in the shared secret as a hex string; other libraries will have different requirements for getting the keys in the right format. The output of the library will be a string that we’ll use as the token value.
+
+```js
+var access_token = jose.jws.JWS.sign(header.alg, JSON.stringify(header), JSON.stringify(payload), new Buffer(sharedTokenSecret).toString('hex')); 
+```
+
+The final JWT looks something like the following:
+
+```js
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkwMDEv
+Iiwic3ViIjoiOVhFMy1KSTM0LTAwMTMyQSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6OTAwMi
+8iLCJpYXQiOjE0NjcyNTEwNzMsImV4cCI6MTQ2NzI1MTM3MywianRpIjoiaEZLUUpSNmUifQ.
+WqRsY03pYwuJTx-9pDQXftkcj7YbRn95o-16NHrVugg
+```
+
+The rest of the server remains unchanged, as we’re still storing the token in the database. However, if we wanted to, we could remove the storage requirement on our authorization server entirely because the token is recognizable by the server from its signature.
+
+Once again, our client is none the wiser that the token format has changed. However, we’re going to need to edit the protected resource so that it can check the token’s signature. To do this, open protectedResource.js and note the same random secret string at the top of the file. Once again, in a production environment, this is likely handled through a key management process and the secret isn’t likely to be this simple to type.
+
+First we need to parse the token, but that’s pretty much like last time.
+
+```js
+var tokenParts = inToken.split('.');
+var header = JSON.parse(base64url.decode(tokenParts[0]));
+var payload = JSON.parse(base64url.decode(tokenParts[1]));
+```
+Next, verify the signature based on our shared secret, and that will be our first check of the token’s contents. Remember, our library needs the secret to be converted to hex before it can validate things.
+
+All of the previous token validity checks go inside this if statement:
+
+```js
+if (jose.jws.JWS.verify(inToken, new Buffer(sharedTokenSecret).toString('hex'), [header.alg])) {
+
+}
+```
+
+Only if the signature is valid do we parse the JWT and check its contents for consistency. If all checks pass, we can hand it off to the application, as we did previously. Now the resource server will only accept tokens that have been signed by the secret that it shares with the authorization server.
+
+
+```
