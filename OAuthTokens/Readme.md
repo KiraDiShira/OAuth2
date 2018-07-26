@@ -212,5 +212,111 @@ if (jose.jws.JWS.verify(inToken, new Buffer(sharedTokenSecret).toString('hex'), 
 
 Only if the signature is valid do we parse the JWT and check its contents for consistency. If all checks pass, we can hand it off to the application, as we did previously. Now the resource server will only accept tokens that have been signed by the secret that it shares with the authorization server.
 
+### Asymmetric signatures using RS256
 
+We’re once again going to sign the token with a secret key, as we did in the last section. However, this time, we’re going to use public key cryptography to do it. With a shared secret, both systems need the same key either to create or to validate the signature. This effectively means that either the authorization server or the resource server could create the tokens in the last exercise, because they both had access to the keying material needed to do so. With public key cryptography, the authorization server has both a private key and a public key that it can use to generate tokens, whereas the protected resource needs to be able to access only the authorization server’s public key to verify the token. Unlike with a shared secret, the protected resource has no way of generating its own valid tokens even though it can easily verify them. We’re going to be using the RS256 signature method from JOSE, which uses the RSA algorithm under the hood.
+
+First, we need to add a public and private key pair to our authorization server. Our key pair is a 2048-bit RSA key, which is the minimum recommended size. We’re using keys stored in the JSON-based JWK format for this exercise, and they can be read natively by our
+library.
+
+```js
+var rsaKey = {
+  "alg": "RS256",
+  "d": "ZXFizvaQ0RzWRbMExStaS_-yVnjtSQ9YslYQF1kkuIoTwFuiEQ2OywBfuyXhTvVQxIiJqPNnUyZR6kXAhyj__wS_Px1EH8zv7BHVt1N5TjJGlubt1dhAFCZQmgz0D-PfmATdf6KLL4HIijGrE8iYOPYIPF_FL8ddaxx5rsziRRnkRMX_fIHxuSQVCe401hSS3QBZOgwVdWEb1JuODT7KUk7xPpMTw5RYCeUoCYTRQ_KO8_NQMURi3GLvbgQGQgk7fmDcug3MwutmWbpe58GoSCkmExUS0U-KEkHtFiC8L6fN2jXh1whPeRCa9eoIK8nsIY05gnLKxXTn5-aPQzSy6Q",
+  "e": "AQAB",
+  "n": "p8eP5gL1H_H9UNzCuQS-vNRVz3NWxZTHYk1tG9VpkfFjWNKG3MFTNZJ1l5g_COMm2_2i_YhQNH8MJ_nQ4exKMXrWJB4tyVZohovUxfw-eLgu1XQ8oYcVYW8ym6Um-BkqwwWL6CXZ70X81YyIMrnsGTyTV6M8gBPun8g2L8KbDbXR1lDfOOWiZ2ss1CRLrmNM-GRp3Gj-ECG7_3Nx9n_s5to2ZtwJ1GS1maGjrSZ9GRAYLrHhndrL_8ie_9DS2T-ML7QNQtNkg2RvLv4f0dpjRYI23djxVtAylYK4oiT_uEMgSkc4dxwKwGuBxSO0g9JOobgfy0--FUHHYtRi0dOFZw",
+  "kty": "RSA",
+  "kid": "authserver"
+};
 ```
+
+This key pair was randomly generated, and in a production environment you’ll want to have a unique key for each service.
+
+First we need to indicate that our token is signed with the RS256 algorithm. We’re also going to indicate that we’re using the key with the key ID (kid) of authserver from our authorization server. The authorization server may have only one key right now, but if you were to add other keys to this set, you’d want the resource server to be able to know which one you used.
+
+```js
+var header = { 'typ': 'JWT', 'alg': rsaKey.alg, 'kid': rsaKey.kid };
+```
+
+Next, we need to convert our JWK-formatted key pair into a form that our library can use for cryptographic operations. Thankfully, our library gives us a simple utility for doing that.7 We can then use this key to sign the token.
+
+```js
+var privateKey = jose.KEYUTIL.getKey(rsaKey);
+```
+
+Then we’ll create our access token string much like we did before, except this time we use our private key and the RS256 asymmetric signing algorithm.
+
+```js
+var access_token = jose.jws.JWS.sign(header.alg,
+JSON.stringify(header),
+JSON.stringify(payload),
+privateKey);
+```
+
+The result is the token similar to the previous one, but it’s now been signed asymmetrically.
+
+```js
+eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImF1dGhzZXJ2ZXIifQ.eyJpc3MiOiJodH
+RwOi8vbG9jYWxob3N0OjkwMDEvIiwic3ViIjoiOVhFMy1KSTM0LTAwMTMyQSIsImF1ZCI6Imh
+0dHA6Ly9sb2NhbGhvc3Q6OTAwMi8iLCJpYXQiOjE0NjcyNTE5NjksImV4cCI6MTQ2NzI1MjI2
+OSwianRpIjoidURYMWNwVnYifQ.nK-tYidfd6IHW8iwJ1ZHcPPnbDdbjnveunKrpOihEb0JD5w
+fjXoYjpToXKfaSFPdpgbhy4ocnRAfKfX6tQfJuFQpZpKmtFG8OVtWpiOYlH4Ecoh3soSkaQyIy
+4L6p8o3gmgl9iyjLQj4B7Anfe6rwQlIQi79WTQwE9bd3tgqic5cPBFtPLqRJQluvjZerkSdUo
+7Kt8XdyGyfTAiyrsWoD1H0WGJm6IodTmSUOH7L08k-mGhUHmSkOgwGddrxLwLcMWWQ6ohmXa
+Vv_Vf-9yTC2STHOKuuUm2w_cRE1sF7JryiO7aFRa8JGEoUff2moaEuLG88weOT_S2EQBhYB
+0vQ8A
+```
+
+The client once again remains unchanged, but we do have to tell the protected resource how to validate the signature of this new JWT. Open up protectedResource.js so that we can tell it the server’s public key.
+
+```js
+var rsaKey = {
+  "alg": "RS256",
+  "e": "AQAB",
+  "n": "p8eP5gL1H_H9UNzCuQS-vNRVz3NWxZTHYk1tG9VpkfFjWNKG3MFTNZJ1l5g_COMm2_2i_
+YhQNH8MJ_nQ4exKMXrWJB4tyVZohovUxfw-eLgu1XQ8oYcVYW8ym6Um-BkqwwWL6CXZ70X81
+YyIMrnsGTyTV6M8gBPun8g2L8KbDbXR1lDfOOWiZ2ss1CRLrmNM-GRp3Gj-ECG7_3Nx9n_s5
+to2ZtwJ1GS1maGjrSZ9GRAYLrHhndrL_8ie_9DS2T-ML7QNQtNkg2RvLv4f0dpjRYI23djxV
+tAylYK4oiT_uEMgSkc4dxwKwGuBxSO0g9JOobgfy0--FUHHYtRi0dOFZw",
+  "kty": "RSA",
+  "kid": "authserver"
+};
+```
+
+This data is from the same key pair as the one in the authorization server, but it doesn’t contain the private key information (represented by the d element in an RSA key). The effect is that the protected resource can only verify incoming signed JWTs, but it cannot create them.
+
+**Do I have to copy my keys all over the place?**
+`
+You might think it’s onerous to copy signing and verification keys between pieces of software like this, and you’d be right. If the authorization server ever decides to update its keys, all copies of the corresponding public key need to be updated in all protected resources downstream. For a large OAuth ecosystem, that can be problematic.
+
+One common approach, used by the OpenID Connect protocol that we’ll cover in chapter 13, is to have the authorization server publish its public key at a known URL. This will generally take the form of a JWK Set, which can contain multiple keys and looks something like this.`
+
+```js
+{
+  "keys": [
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "n": "p8eP5gL1H_H9UNzCuQS-vNRVz3NWxZTHYk1tG9VpkfFjWNKG3MFTNZJ1l5g_
+COMm2_2i_YhQNH8MJ_nQ4exKMXrWJB4tyVZohovUxfw-eLgu1XQ8oYcVYW8ym6Um-Bkqww
+WL6CXZ70X81YyIMrnsGTyTV6M8gBPun8g2L8KbDbXR1lDfOOWiZ2ss1CRLrmNM-GRp3Gj-
+ECG7_3Nx9n_s5to2ZtwJ1GS1maGjrSZ9GRAYLrHhndrL_8ie_9DS2T-ML7QNQtNkg2RvLv4f
+0dpjRYI23djxVtAylYK4oiT_uEMgSkc4dxwKwGuBxSO0g9JOobgfy0--FUHHYtRi0dOFZw",
+      "kty": "RSA",
+      "kid": "authserver"
+    }
+  ]
+}
+```
+`The protected resources can then fetch and cache this key as needed. This approach allows the authorization server to rotate its keys whenever it sees fit, or add new keys over time, and the changes will automatically propagate throughout the network.`
+
+Now we’ll use our library to validate the signatures of incoming tokens based on the server’s public key. Load up the public key into an object that our library can use, and then use that key to validate the token’s signature.
+
+```js
+var publicKey = jose.KEYUTIL.getKey(rsaKey);
+
+if (jose.jws.JWS.verify(inToken, publicKey, [header.alg])) {
+}
+```
+
+Now that this has been set up, the authorization server can choose to include additional information for the protected resource’s consumption, such as scopes or client identifiers.
